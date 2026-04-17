@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__list_projects",
+      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__execute_sql"
+    ]
+  }
+}

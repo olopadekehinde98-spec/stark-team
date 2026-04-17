@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stark Team — Design Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0b0f1a; color: #e2e8f0; display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar {
+    width: 240px; min-width: 240px;
+    background: #111827;
+    border-right: 1px solid #1f2937;
+    display: flex; flex-direction: column;
+    padding: 0;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid #1f2937;
+  }
+  .sidebar-logo .wordmark {
+    font-size: 18px; font-weight: 800; letter-spacing: 0.12em;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .sidebar-logo .tagline { font-size: 10px; color: #6b7280; letter-spacing: 0.08em; margin-top: 2px; }
+
+  .nav-section { padding: 16px 12px 8px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: #4b5563; letter-spacing: 0.1em; text-transform: uppercase; padding: 0 8px 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    font-size: 13.5px; font-weight: 500; color: #9ca3af;
+    cursor: pointer; margin-bottom: 2px; transition: all 0.15s;
+  }
+  .nav-item:hover { background: #1f2937; color: #e2e8f0; }
+  .nav-item.active { background: linear-gradient(135deg, #6366f120, #8b5cf620); color: #a78bfa; }
+  .nav-item.active .nav-icon { color: #818cf8; }
+  .nav-icon { font-size: 16px; width: 18px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: #6366f1; color: #fff;
+    font-size: 10px; font-weight: 700; border-radius: 10px;
+    padding: 1px 6px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 16px 12px;
+    border-top: 1px solid #1f2937;
+  }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; border-radius: 10px;
+    background: #1f2937; cursor: pointer;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .user-role { font-size: 11px; color: #6b7280; }
+
+  /* ── MAIN ────────────────────────────────────────────────── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 58px; background: #111827;
+    border-bottom: 1px solid #1f2937;
+    display: flex; align-items: center;
+    padding: 0 24px; gap: 16px;
+  }
+  .topbar-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+  .topbar-spacer { flex: 1; }
+  .topbar-search {
+    background: #1f2937; border: 1px solid #374151;
+    border-radius: 8px; padding: 7px 14px;
+    font-size: 13px; color: #9ca3af; width: 200px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: #1f2937; border: 1px solid #374151;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; color: #9ca3af; position: relative;
+  }
+  .notif-dot {
+    width: 7px; height: 7px; background: #6366f1;
+    border-radius: 50%; position: absolute; top: 6px; right: 6px;
+    border: 1.5px solid #111827;
+  }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; background: #0b0f1a; }
+
+  /* ── STATS ROW ───────────────────────────────────────────── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: #111827; border: 1px solid #1f2937;
+    border-radius: 14px; padding: 20px;
+  }
+  .stat-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-value { font-size: 28px; font-weight: 800; margin: 6px 0 4px; color: #f1f5f9; }
+  .stat-value.purple { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-delta { font-size: 12px; }
+  .stat-delta.up { color: #10b981; }
+  .stat-delta.down { color: #ef4444; }
+  .stat-icon { font-size: 22px; float: right; margin-top: -4px; }
+
+  /* ── GRID ────────────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .card {
+    background: #111827; border: 1px solid #1f2937;
+    border-radius: 14px; padding: 20px;
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+  .card-action { font-size: 12px; color: #6366f1; cursor: pointer; font-weight: 500; }
+
+  /* LEADERBOARD */
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #1f2937;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-size: 12px; font-weight: 700; color: #4b5563; width: 20px; text-align: center; }
+  .lb-rank.gold { color: #f59e0b; }
+  .lb-rank.silver { color: #9ca3af; }
+  .lb-rank.bronze { color: #b45309; }
+  .lb-name { flex: 1; font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .lb-rank-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; background: #6366f115; color: #818cf8;
+    border: 1px solid #6366f130;
+  }
+  .lb-score { font-size: 13px; font-weight: 700; color: #a78bfa; }
+
+  /* ACTIVITY FEED */
+  .activity-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid #1f2937;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .act-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .act-dot.green { background: #10b981; }
+  .act-dot.yellow { background: #f59e0b; }
+  .act-dot.red { background: #ef4444; }
+  .act-dot.purple { background: #8b5cf6; }
+  .act-title { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .act-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .act-time { font-size: 11px; color: #4b5563; margin-left: auto; white-space: nowrap; }
+
+  /* GOAL PROGRESS */
+  .goal-item { margin-bottom: 16px; }
+  .goal-item:last-child { margin-bottom: 0; }
+  .goal-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .goal-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .goal-pct { font-size: 12px; font-weight: 700; color: #a78bfa; }
+  .goal-bar { height: 6px; background: #1f2937; border-radius: 999px; overflow: hidden; }
+  .goal-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .goal-meta { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+  /* RECOGNITION */
+  .recog-card {
+    background: linear-gradient(135deg, #6366f108, #8b5cf608);
+    border: 1px solid #6366f120; border-radius: 12px; padding: 14px;
+    margin-bottom: 10px;
+  }
+  .recog-card:last-child { margin-bottom: 0; }
+  .recog-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .recog-badge { font-size: 18px; }
+  .recog-from { font-size: 11px; color: #6b7280; }
+  .recog-name { font-size: 13px; font-weight: 700; color: #c4b5fd; }
+  .recog-msg { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+  /* VERIFY QUEUE */
+  .verify-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 0; border-bottom: 1px solid #1f2937;
+  }
+  .verify-row:last-child { border-bottom: none; }
+  .verify-info { flex: 1; }
+  .verify-title { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .verify-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .btn-verify { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-v { background: #6366f120; color: #818cf8; }
+  .btn-r { background: #ef444420; color: #f87171; margin-left: 4px; }
+
+  /* STATUS CHIPS */
+  .chip { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .chip-green { background: #10b98120; color: #34d399; }
+  .chip-yellow { background: #f59e0b20; color: #fbbf24; }
+  .chip-red { background: #ef444420; color: #f87171; }
+  .chip-purple { background: #8b5cf620; color: #a78bfa; }
+
+  /* PAGE LABEL */
+  .page-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    color: #4b5563; text-transform: uppercase; margin-bottom: 16px;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">STARK TEAM</div>
+    <div class="tagline">Private Operations Platform</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active"><span class="nav-icon">⊞</span> Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span> Activities <span class="nav-badge">3</span></div>
+    <div class="nav-item"><span class="nav-icon">◎</span> Goals</div>
+    <div class="nav-item"><span class="nav-icon">▲</span> Leaderboard</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Team</div>
+    <div class="nav-item"><span class="nav-icon">✦</span> Recognition</div>
+    <div class="nav-item"><span class="nav-icon">◈</span> Team</div>
+    <div class="nav-item"><span class="nav-icon">✓</span> Verify Queue <span class="nav-badge">7</span></div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tools</div>
+    <div class="nav-item"><span class="nav-icon">◆</span> AI Coach</div>
+    <div class="nav-item"><span class="nav-icon">◉</span> Notifications <span class="nav-badge">2</span></div>
+    <div class="nav-item"><span class="nav-icon">⊙</span> Settings</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">SA</div>
+      <div>
+        <div class="user-name">Stark Admin</div>
+        <div class="user-role">Admin · Director</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-search">🔍 &nbsp;Search...</div>
+    <div class="topbar-btn">🔔 <div class="notif-dot"></div></div>
+    <div class="topbar-btn">⋮</div>
+  </header>
+
+  <div class="content">
+    <div class="page-label">Overview — April 2026</div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Activities <span class="stat-icon">⚡</span></div>
+        <div class="stat-value purple">248</div>
+        <div class="stat-delta up">↑ 12% this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Verified <span class="stat-icon">✓</span></div>
+        <div class="stat-value" style="color:#10b981">183</div>
+        <div class="stat-delta up">↑ 73.8% rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Review <span class="stat-icon">◔</span></div>
+        <div class="stat-value" style="color:#f59e0b">42</div>
+        <div class="stat-delta down">↑ 7 since yesterday</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Members <span class="stat-icon">◈</span></div>
+        <div class="stat-value" style="color:#f1f5f9">24</div>
+        <div class="stat-delta up">↑ 2 new this week</div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Leaderboard + Activity Feed -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Monthly Leaderboard</div>
+          <div class="card-action">View all →</div>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank gold">1</div>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px">JD</div>
+          <div class="lb-name">James Doe <span class="lb-rank-badge">Director</span></div>
+          <div class="lb-score">412 pts</div>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank silver">2</div>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:linear-gradient(135deg,#10b981,#059669)">SM</div>
+          <div class="lb-name">Sarah M. <span class="lb-rank-badge">Exec. Mgr</span></div>
+          <div class="lb-score">387 pts</div>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank bronze">3</div>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:linear-gradient(135deg,#f59e0b,#d97706)">RK</div>
+          <div class="lb-name">Ray K. <span class="lb-rank-badge">Sr. Manager</span></div>
+          <div class="lb-score">341 pts</div>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank">4</div>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:linear-gradient(135deg,#ec4899,#db2777)">AL</div>
+          <div class="lb-name">Amy L. <span class="lb-rank-badge">Manager</span></div>
+          <div class="lb-score">298 pts</div>
+        </div>
+        <div class="lb-row">
+          <div class="lb-rank">5</div>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px;background:linear-gradient(135deg,#14b8a6,#0d9488)">TO</div>
+          <div class="lb-name">Tom O. <span class="lb-rank-badge">Manager</span></div>
+          <div class="lb-score">261 pts</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Activity Feed</div>
+          <div class="card-action">See all →</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot green"></div>
+          <div>
+            <div class="act-title">Sales Call — Verified</div>
+            <div class="act-sub">James Doe · Director</div>
+          </div>
+          <div class="act-time">2m ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot yellow"></div>
+          <div>
+            <div class="act-title">Client Meeting — Pending</div>
+            <div class="act-sub">Sarah M. · Exec. Manager</div>
+          </div>
+          <div class="act-time">18m ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot purple"></div>
+          <div>
+            <div class="act-title">Team Training Submitted</div>
+            <div class="act-sub">Ray K. · Sr. Manager</div>
+          </div>
+          <div class="act-time">1h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot red"></div>
+          <div>
+            <div class="act-title">Report Submission — Rejected</div>
+            <div class="act-sub">Amy L. · Manager</div>
+          </div>
+          <div class="act-time">3h ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Goals + Recognition + Verify Queue -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">My Goals</div>
+          <div class="card-action">+ Add →</div>
+        </div>
+        <div class="goal-item">
+          <div class="goal-top"><span class="goal-name">Monthly Sales Target</span><span class="goal-pct">78%</span></div>
+          <div class="goal-bar"><div class="goal-fill" style="width:78%"></div></div>
+          <div class="goal-meta">78 / 100 · Due Apr 30</div>
+        </div>
+        <div class="goal-item">
+          <div class="goal-top"><span class="goal-name">Recruit 5 Members</span><span class="goal-pct">60%</span></div>
+          <div class="goal-bar"><div class="goal-fill" style="width:60%"></div></div>
+          <div class="goal-meta">3 / 5 · Due Apr 25</div>
+        </div>
+        <div class="goal-item">
+          <div class="goal-top"><span class="goal-name">Weekly Calls</span><span class="goal-pct">100%</span></div>
+          <div class="goal-bar"><div class="goal-fill" style="width:100%;background:linear-gradient(90deg,#10b981,#059669)"></div></div>
+          <div class="goal-meta">10 / 10 · Completed ✓</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recognition Wall</div>
+          <div class="card-action">Give one →</div>
+        </div>
+        <div class="recog-card">
+          <div class="recog-top">
+            <div class="recog-badge">🏆</div>
+            <div><div class="recog-name">James Doe</div><div class="recog-from">From: Stark Admin</div></div>
+          </div>
+          <div class="recog-msg">"Outstanding leadership this month — your team's performance has been exemplary across all metrics."</div>
+        </div>
+        <div class="recog-card">
+          <div class="recog-top">
+            <div class="recog-badge">⚡</div>
+            <div><div class="recog-name">Sarah M.</div><div class="recog-from">From: James Doe</div></div>
+          </div>
+          <div class="recog-msg">"Incredible activity rate — top performer for the third week running. Keep it up!"</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Verify Queue</div>
+          <span class="chip chip-yellow">7 pending</span>
+        </div>
+        <div class="verify-row">
+          <div class="verify-info">
+            <div class="verify-title">Sales Call</div>
+            <div class="verify-sub">Ray K. · 2h ago · has proof</div>
+          </div>
+          <button class="btn-verify btn-v">✓ Verify</button>
+          <button class="btn-verify btn-r">✗</button>
+        </div>
+        <div class="verify-row">
+          <div class="verify-info">
+            <div class="verify-title">Client Meeting</div>
+            <div class="verify-sub">Amy L. · 4h ago · has proof</div>
+          </div>
+          <button class="btn-verify btn-v">✓ Verify</button>
+          <button class="btn-verify btn-r">✗</button>
+        </div>
+        <div class="verify-row">
+          <div class="verify-info">
+            <div class="verify-title">Recruitment</div>
+            <div class="verify-sub">Tom O. · 6h ago · no proof</div>
+          </div>
+          <button class="btn-verify btn-v">✓ Verify</button>
+          <button class="btn-verify btn-r">✗</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>
