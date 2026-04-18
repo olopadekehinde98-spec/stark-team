@@ -1,6 +1,7 @@
 'use client'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -78,27 +79,19 @@ function Sidebar({
         padding: '20px 16px 16px',
         borderBottom: '1px solid var(--b1)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <div className="hexagon" style={{
-            width: 36, height: 36, background: 'var(--gold)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 10 }}>
+          <div style={{
             flexShrink: 0,
+            filter: 'drop-shadow(0 0 6px rgba(32,200,224,0.5))',
           }}>
-            <span style={{
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 13, color: '#03060A',
-            }}>ST</span>
-          </div>
-          <div>
-            <div style={{
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase',
-              color: 'var(--text-primary)', lineHeight: 1,
-            }}>STARK TEAM</div>
-            <div className="font-mono" style={{
-              fontSize: 8, letterSpacing: '0.18em', color: 'var(--text-muted)',
-              marginTop: 2,
-            }}>Command Platform</div>
+            <Image
+              src="/stark-logo.png"
+              alt="Stark Team"
+              width={160}
+              height={107}
+              priority
+              style={{ display: 'block', objectFit: 'contain', width: 160, height: 'auto' }}
+            />
           </div>
         </div>
 
