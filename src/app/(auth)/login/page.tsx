@@ -24,90 +24,68 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg)', position: 'relative', overflow: 'hidden',
+      background: '#0b0f1a', position: 'relative', overflow: 'hidden',
     }}>
-
-      {/* ── BLUE ELECTRIC AMBIENT GLOW ─────────────── */}
+      {/* Ambient glow */}
       <div style={{
-        position: 'absolute', top: '30%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 600, height: 400,
-        background: 'radial-gradient(ellipse at center, rgba(32,200,224,0.06) 0%, rgba(10,30,80,0.04) 50%, transparent 70%)',
-        pointerEvents: 'none',
+        position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',
+        width: 600, height: 400, borderRadius: '50%', pointerEvents: 'none',
+        background: 'radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)',
       }} />
 
-      {/* ── CENTER PANEL ───────────────────────────── */}
+      {/* Panel */}
       <div style={{
         position: 'relative', width: '100%', maxWidth: 420, margin: '0 16px',
-        background: 'var(--s1)', border: '1px solid var(--b2)',
-        padding: '0 36px 32px',
+        background: '#111827', border: '1px solid #1f2937', borderRadius: 16,
+        padding: '36px 36px 28px', overflow: 'hidden',
       }}>
-
-        {/* Top blue electric line */}
+        {/* Top gradient line */}
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-          background: 'linear-gradient(90deg, transparent, #20C8E0, #4DA8FF, #20C8E0, transparent)',
+          background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1)',
+          borderRadius: '16px 16px 0 0',
         }} />
 
-        {/* Top corner brackets — blue */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 14, borderTop: '2px solid #20C8E0', borderLeft: '2px solid #20C8E0' }} />
-        <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 14, borderTop: '2px solid #20C8E0', borderRight: '2px solid #20C8E0' }} />
-
-        {/* ── LOGO ───────────────────────────────────── */}
-        <div style={{ textAlign: 'center', marginBottom: 24, paddingTop: 32 }}>
-
-          {/* Logo image with electric glow */}
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
-            position: 'relative', display: 'inline-block',
-            filter: 'drop-shadow(0 0 18px rgba(32,200,224,0.45)) drop-shadow(0 0 40px rgba(77,168,255,0.20))',
-            marginBottom: 10,
+            display: 'inline-block',
+            filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.4))',
+            marginBottom: 8,
           }}>
-            <Image
-              src="/stark-logo.png"
-              alt="Stark Team"
-              width={200}
-              height={133}
-              priority
-              style={{ display: 'block', objectFit: 'contain' }}
-            />
+            <Image src="/stark-logo.png" alt="Stark Team" width={180} height={120} priority style={{ display: 'block' }} />
           </div>
-
-          <div className="font-mono" style={{
-            fontSize: 9, letterSpacing: '0.28em', textTransform: 'uppercase',
-            color: 'var(--text-muted)', marginTop: 4,
-          }}>AUTHORIZED PERSONNEL ONLY</div>
+          <div style={{ fontSize: 11, color: '#4b5563', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>
+            Private Operations Platform
+          </div>
         </div>
 
-        {/* ── DIVIDER ────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
-          <span className="font-mono" style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.22em' }}>
-            IDENTITY VERIFICATION
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <div style={{ flex: 1, height: 1, background: '#1f2937' }} />
+          <span style={{ fontSize: 10, color: '#4b5563', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            Sign In
           </span>
-          <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
+          <div style={{ flex: 1, height: 1, background: '#1f2937' }} />
         </div>
 
-        {/* ── FORM ───────────────────────────────────── */}
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           {error && (
             <div style={{
-              padding: '10px 14px', marginBottom: 16,
-              background: 'rgba(232,48,64,0.08)', border: '1px solid rgba(232,48,64,0.25)',
-              color: 'var(--danger)', fontFamily: 'Share Tech Mono, monospace',
-              fontSize: 11, letterSpacing: '0.05em',
+              padding: '10px 14px', marginBottom: 16, borderRadius: 8,
+              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)',
+              color: '#f87171', fontSize: 12, fontWeight: 500,
             }}>
-              ⚠ {error.toUpperCase()}
+              ⚠ {error}
             </div>
           )}
 
-          <div style={{ marginBottom: 16 }}>
-            <label className="font-mono" style={{
-              display: 'block', marginBottom: 6,
-              fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-            }}>
-              OPERATIVE EMAIL
-            </label>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{
+              display: 'block', marginBottom: 6, fontSize: 12,
+              fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em',
+            }}>Email</label>
             <input
               type="email" required value={email}
               onChange={e => setEmail(e.target.value)}
@@ -116,14 +94,11 @@ export default function LoginPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label className="font-mono" style={{
-              display: 'block', marginBottom: 6,
-              fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-            }}>
-              ACCESS CODE
-            </label>
+          <div style={{ marginBottom: 22 }}>
+            <label style={{
+              display: 'block', marginBottom: 6, fontSize: 12,
+              fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em',
+            }}>Password</label>
             <input
               type="password" required value={password}
               onChange={e => setPassword(e.target.value)}
@@ -134,42 +109,29 @@ export default function LoginPage() {
 
           <button
             type="submit" disabled={loading}
+            className="btn-primary"
             style={{
-              width: '100%', padding: '13px 0',
-              background: loading
-                ? 'rgba(32,200,224,0.4)'
-                : 'linear-gradient(135deg, #1570C8 0%, #20C8E0 100%)',
-              color: '#fff',
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 14, letterSpacing: '0.22em', textTransform: 'uppercase',
-              border: 'none', borderRadius: 0,
+              width: '100%', padding: '12px 0', fontSize: 14,
+              letterSpacing: '0.04em', opacity: loading ? 0.6 : 1,
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.15s',
-              boxShadow: loading ? 'none' : '0 0 20px rgba(32,200,224,0.25)',
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(99,102,241,0.30)',
             }}
-            onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
           >
-            {loading ? 'AUTHENTICATING...' : '⚡ AUTHENTICATE'}
+            {loading ? 'Signing in...' : 'Sign In →'}
           </button>
         </form>
 
-        {/* ── INVITE WARNING ──────────────────────────── */}
+        {/* Warning */}
         <div style={{
-          marginTop: 18, padding: '8px 12px',
-          background: 'rgba(32,200,224,0.04)',
-          border: '1px solid rgba(32,200,224,0.15)',
+          marginTop: 16, padding: '10px 14px', borderRadius: 8,
+          background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span className="font-mono" style={{ fontSize: 9, color: '#20C8E0', letterSpacing: '0.05em', flexShrink: 0 }}>[!]</span>
-          <span className="font-mono" style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
-            INVITE-ONLY PLATFORM — REQUEST ACCESS FROM YOUR COMMANDING OFFICER
+          <span style={{ fontSize: 14, flexShrink: 0 }}>🔒</span>
+          <span style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.4 }}>
+            Invite-only platform — request access from your commanding officer
           </span>
         </div>
-
-        {/* Bottom corner brackets */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: 14, height: 14, borderLeft: '2px solid var(--b3)', borderBottom: '2px solid var(--b3)' }} />
-        <div style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, borderRight: '2px solid var(--b3)', borderBottom: '2px solid var(--b3)' }} />
       </div>
     </div>
   )

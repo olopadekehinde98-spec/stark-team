@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design 03 — Phantom Green | Stark Team</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #00FF41;
+      --dim: #00AA2B;
+      --faint: #005515;
+      --bg: #000805;
+      --bg2: #001008;
+      --bg3: #001A0A;
+      --text: #00CC33;
+      --text-dim: #004D15;
+      --border: #002A0D;
+      --border-bright: #004A18;
+      --glow: 0 0 12px rgba(0, 255, 65, 0.4);
+      --glow-strong: 0 0 24px rgba(0, 255, 65, 0.3);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* SCANLINES */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.015) 2px,
+        rgba(0, 255, 65, 0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* GRID */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .design-badge {
+      position: fixed;
+      top: 0; right: 0;
+      background: var(--primary);
+      color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 5px 16px;
+      z-index: 9999;
+      clip-path: polygon(12px 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border-bright);
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 18px 16px 16px;
+      border-bottom: 1px solid var(--border-bright);
+    }
+
+    .logo-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      color: var(--primary);
+      letter-spacing: 0.3em;
+      text-shadow: var(--glow);
+    }
+
+    .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      letter-spacing: 0.15em;
+    }
+
+    .sidebar-section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 0.3em;
+      padding: 12px 16px 5px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--faint);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: color 0.1s, background 0.1s;
+      text-transform: uppercase;
+    }
+
+    .nav-item:hover {
+      color: var(--dim);
+      background: rgba(0, 255, 65, 0.04);
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+      background: rgba(0, 255, 65, 0.07);
+      border-left-color: var(--primary);
+      text-shadow: 0 0 8px rgba(0,255,65,0.6);
+    }
+
+    .nav-prefix {
+      color: var(--dim);
+      font-size: 10px;
+    }
+
+    .nav-item.active .nav-prefix { color: var(--primary); }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 9px;
+      color: var(--dim);
+      border: 1px solid var(--border-bright);
+      padding: 1px 4px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-bright);
+      padding: 12px 16px;
+    }
+
+    .sidebar-footer .status-line {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+    }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 7px; height: 12px;
+      background: var(--primary);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* TOPBAR */
+    .topbar {
+      position: fixed;
+      top: 0; left: 220px; right: 0;
+      height: 52px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 99;
+    }
+
+    .topbar-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: var(--primary);
+      letter-spacing: 0.25em;
+      text-shadow: var(--glow);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-clock {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      color: var(--primary);
+      text-shadow: var(--glow);
+      letter-spacing: 0.12em;
+    }
+
+    .topbar-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      border: 1px solid var(--border-bright);
+      padding: 3px 8px;
+      letter-spacing: 0.15em;
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 220px;
+      margin-top: 52px;
+      padding: 24px 26px;
+      min-height: calc(100vh - 52px);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.3em;
+    }
+
+    .section-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-bright);
+    }
+
+    /* STATS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-block {
+      background: var(--bg3);
+      border: 1px solid var(--border-bright);
+      padding: 16px 16px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--primary);
+      opacity: 0.5;
+    }
+
+    .stat-block:hover {
+      border-color: var(--primary);
+      box-shadow: var(--glow-strong);
+    }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(0,255,65,0.5);
+    }
+
+    .stat-delta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+
+    .stat-delta.up { color: var(--dim); }
+    .stat-delta.warn { color: #AAAA00; }
+
+    /* TABLE */
+    .table-wrap {
+      background: var(--bg3);
+      border: 1px solid var(--border-bright);
+      margin-bottom: 24px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border-bright);
+    }
+
+    .table-header h3 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--primary);
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 8px rgba(0,255,65,0.3);
+    }
+
+    .count-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      border: 1px solid var(--border-bright);
+      padding: 1px 6px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      padding: 9px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-bright);
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); cursor: default; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0, 255, 65, 0.05); }
+
+    tbody td {
+      padding: 10px 18px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      padding: 2px 7px;
+    }
+
+    .badge-verified { color: var(--primary); border: 1px solid var(--border-bright); background: rgba(0,255,65,0.07); }
+    .badge-pending { color: #BBBB00; border: 1px solid rgba(180,180,0,0.3); background: rgba(180,180,0,0.07); }
+    .badge-active { color: #00BBBB; border: 1px solid rgba(0,180,180,0.3); background: rgba(0,180,180,0.07); }
+    .badge-flagged { color: #FF4444; border: 1px solid rgba(255,68,68,0.3); background: rgba(255,68,68,0.07); }
+
+    /* RANK */
+    .rank-section {
+      background: var(--bg3);
+      border: 1px solid var(--border-bright);
+      padding: 20px 22px;
+    }
+
+    .rank-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .rank-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--primary);
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 8px rgba(0,255,65,0.4);
+    }
+
+    .rank-cycle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+
+    .rank-current {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .rank-badge-large {
+      width: 54px; height: 54px;
+      background: rgba(0,255,65,0.05);
+      border: 1px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow);
+      flex-shrink: 0;
+    }
+
+    .rank-badge-large span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      color: var(--primary);
+      text-shadow: var(--glow);
+    }
+
+    .rank-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 8px rgba(0,255,65,0.3);
+    }
+
+    .rank-pts {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 5px;
+    }
+
+    .rank-bar-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .rank-bar-label span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+
+    .rank-bar-label .pct { color: var(--primary); }
+
+    .progress-track {
+      width: 100%;
+      height: 3px;
+      background: var(--border-bright);
+    }
+
+    .progress-fill {
+      height: 3px;
+      width: 72%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    .rank-milestones {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .milestone {
+      flex: 1;
+      min-width: 90px;
+      background: rgba(0,255,65,0.03);
+      border: 1px solid var(--border-bright);
+      padding: 10px 12px;
+    }
+
+    .milestone-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      margin-bottom: 5px;
+    }
+
+    .milestone-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--primary);
+      text-shadow: 0 0 6px rgba(0,255,65,0.4);
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+  </style>
+</head>
+<body>
+  <div class="design-badge">DESIGN 03 · PHANTOM GREEN</div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-text">STARK_</div>
+        <div class="logo-sub">// PHANTOM TERMINAL v3.1.0</div>
+      </div>
+
+      <div class="sidebar-section-label">// NAV_TREE</div>
+      <nav>
+        <div class="nav-item active">
+          <span class="nav-prefix">&gt;</span> DASHBOARD<span class="nav-badge">ON</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-prefix">&gt;</span> ACTIVITIES<span class="nav-badge">42</span>
+        </div>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> GOALS</div>
+        <div class="nav-item">
+          <span class="nav-prefix">&gt;</span> VERIFY_QUEUE<span class="nav-badge">5</span>
+        </div>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> LEADERBOARD</div>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> TEAM_TREE</div>
+      </nav>
+
+      <div class="sidebar-section-label">// SYS_ACCESS</div>
+      <nav>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> AI_COACH</div>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> ADMIN_PANEL</div>
+        <div class="nav-item"><span class="nav-prefix">&gt;</span> PROFILE</div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-line">// SESSION ACTIVE<span class="cursor-blink"></span></div>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="topbar-title">[ DASHBOARD ]</div>
+      <div class="topbar-right">
+        <div class="topbar-tag">SYS:OK · ENC:ON</div>
+        <div class="topbar-clock">14:32:00</div>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <div class="section-header">
+        <h2>// OPERATIONAL_OVERVIEW</h2>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-block">
+          <div class="stat-label">// ACTIVITIES</div>
+          <div class="stat-value">42</div>
+          <div class="stat-delta up">+7_THIS_WEEK</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">// VERIFIED_RATE</div>
+          <div class="stat-value">78%</div>
+          <div class="stat-delta up">+3%_VS_LAST</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">// LEADERBOARD</div>
+          <div class="stat-value">#3</div>
+          <div class="stat-delta">UP_2_RANKS</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">// PENDING</div>
+          <div class="stat-value">5</div>
+          <div class="stat-delta warn">AWAIT_REVIEW</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2>// ACTIVITY_LOG</h2>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>&gt; RECENT_OPS.LOG</h3>
+          <span class="count-tag">4 RECORDS</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>REF_ID</th>
+              <th>AGENT</th>
+              <th>OP_TYPE</th>
+              <th>TIMESTAMP</th>
+              <th>PTS</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#ACT-0041</td>
+              <td>SGT.REYES</td>
+              <td>FIELD_RECON_RPT</td>
+              <td>14:18:44</td>
+              <td>+120</td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0040</td>
+              <td>CPL.MASON</td>
+              <td>EQUIP_AUDIT</td>
+              <td>13:55:02</td>
+              <td>+80</td>
+              <td><span class="badge badge-pending">PENDING</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0039</td>
+              <td>PVT.CHEN</td>
+              <td>TRAIN_DRILL_LOG</td>
+              <td>13:30:17</td>
+              <td>+60</td>
+              <td><span class="badge badge-active">ACTIVE</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0038</td>
+              <td>LT.HAYES</td>
+              <td>INCIDENT_RPT</td>
+              <td>12:47:33</td>
+              <td>+000</td>
+              <td><span class="badge badge-flagged">FLAGGED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-header">
+        <h2>// RANK_PROGRESSION</h2>
+      </div>
+
+      <div class="rank-section">
+        <div class="rank-header">
+          <div class="rank-title">&gt; RANK_STATUS.SYS</div>
+          <div class="rank-cycle">CYCLE_APR_2026</div>
+        </div>
+
+        <div class="rank-current">
+          <div class="rank-badge-large"><span>E5</span></div>
+          <div>
+            <div class="rank-name">SERGEANT_FIRST_CLASS</div>
+            <div class="rank-pts">2840/3950 PTS · NEXT: STAFF_SGT</div>
+          </div>
+        </div>
+
+        <div class="rank-bar-label">
+          <span>EARNED: 2840</span>
+          <span class="pct">72%</span>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+
+        <div class="rank-milestones">
+          <div class="milestone">
+            <div class="milestone-label">ACTIVITIES</div>
+            <div class="milestone-val">42</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">STREAK</div>
+            <div class="milestone-val">14D</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">COMMEND</div>
+            <div class="milestone-val">7</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">MISSIONS</div>
+            <div class="milestone-val">23</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">ACCURACY</div>
+            <div class="milestone-val">91%</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

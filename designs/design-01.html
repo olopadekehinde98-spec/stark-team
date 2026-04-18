@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design 01 — Blue Electric | Stark Team</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1570C8;
+      --accent: #20C8E0;
+      --bg: #02050D;
+      --bg2: #040C1A;
+      --bg3: #061428;
+      --text: #A8C8E8;
+      --text-dim: #4A6A8A;
+      --border: #0E2A50;
+      --glow: 0 0 12px rgba(32, 200, 224, 0.35);
+      --glow-strong: 0 0 20px rgba(21, 112, 200, 0.6);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* GRID LINES BACKGROUND */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(21,112,200,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21,112,200,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* DESIGN BADGE */
+    .design-badge {
+      position: fixed;
+      top: 0;
+      right: 0;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 5px 14px;
+      z-index: 9999;
+      clip-path: polygon(10px 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    /* LAYOUT */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .logo-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-shadow: var(--glow);
+    }
+
+    .sidebar-logo .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      margin-top: 2px;
+    }
+
+    .sidebar-section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      padding: 14px 18px 6px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 18px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: color 0.15s, background 0.15s;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      color: var(--text);
+      background: rgba(21, 112, 200, 0.08);
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+      background: rgba(32, 200, 224, 0.07);
+      border-left-color: var(--accent);
+    }
+
+    .nav-item .nav-icon {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: inherit;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-item .nav-badge {
+      margin-left: auto;
+      background: rgba(21, 112, 200, 0.25);
+      color: var(--accent);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      padding: 1px 5px;
+      border: 1px solid rgba(32, 200, 224, 0.3);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 14px 18px;
+    }
+
+    .sidebar-footer .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      margin-right: 8px;
+    }
+
+    .sidebar-footer span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 220px;
+      right: 0;
+      height: 52px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 99;
+    }
+
+    .topbar-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #FFFFFF;
+      letter-spacing: 0.2em;
+    }
+
+    .topbar-title span {
+      color: var(--accent);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .topbar-clock {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-shadow: var(--glow);
+    }
+
+    .topbar-status {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 220px;
+      margin-top: 52px;
+      padding: 28px;
+      min-height: calc(100vh - 52px);
+    }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+
+    .section-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* STAT BLOCKS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-block::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .stat-block:hover {
+      border-color: var(--primary);
+      box-shadow: var(--glow-strong);
+    }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: #FFFFFF;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-value.accent { color: var(--accent); }
+
+    .stat-delta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .stat-delta.up { color: #00E676; }
+    .stat-delta.warn { color: #FFB300; }
+
+    .stat-block .stat-icon {
+      position: absolute;
+      bottom: 14px;
+      right: 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 28px;
+      color: rgba(21, 112, 200, 0.12);
+      letter-spacing: -0.05em;
+    }
+
+    /* ACTIVITY TABLE */
+    .table-wrap {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(21, 112, 200, 0.06);
+    }
+
+    .table-header h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .table-header .count-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(14, 42, 80, 0.6);
+      cursor: default;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody tr:hover {
+      background: rgba(21, 112, 200, 0.1);
+    }
+
+    tbody td {
+      padding: 11px 20px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 2px 8px;
+      text-transform: uppercase;
+    }
+
+    .badge-verified {
+      background: rgba(0, 230, 118, 0.12);
+      color: #00E676;
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .badge-pending {
+      background: rgba(255, 179, 0, 0.1);
+      color: #FFB300;
+      border: 1px solid rgba(255, 179, 0, 0.3);
+    }
+
+    .badge-active {
+      background: rgba(32, 200, 224, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(32, 200, 224, 0.3);
+    }
+
+    .badge-flagged {
+      background: rgba(232, 48, 64, 0.1);
+      color: #E83040;
+      border: 1px solid rgba(232, 48, 64, 0.3);
+    }
+
+    /* RANK SECTION */
+    .rank-section {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 22px 24px;
+    }
+
+    .rank-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .rank-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #FFFFFF;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .rank-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+    }
+
+    .rank-current {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .rank-badge-large {
+      width: 56px;
+      height: 56px;
+      background: rgba(21, 112, 200, 0.15);
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow-strong);
+    }
+
+    .rank-badge-large span {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    .rank-info .rank-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: #FFFFFF;
+      letter-spacing: 0.1em;
+    }
+
+    .rank-info .rank-pts {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    .rank-next {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .rank-next span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .rank-next .pct {
+      color: var(--accent);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      overflow: visible;
+    }
+
+    .progress-fill {
+      height: 3px;
+      width: 72%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -3px;
+      width: 3px;
+      height: 9px;
+      background: #FFFFFF;
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    .rank-milestones {
+      display: flex;
+      gap: 16px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .milestone {
+      flex: 1;
+      min-width: 120px;
+      background: rgba(21, 112, 200, 0.06);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+    }
+
+    .milestone-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      margin-bottom: 6px;
+    }
+
+    .milestone-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); }
+  </style>
+</head>
+<body>
+  <div class="design-badge">DESIGN 01 · BLUE ELECTRIC</div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-text">STARK</div>
+        <div class="logo-sub">// COMMAND PLATFORM v2.4</div>
+      </div>
+
+      <div class="sidebar-section-label">// NAVIGATION</div>
+
+      <nav>
+        <div class="nav-item active">
+          <span class="nav-icon">&gt;_</span>
+          DASHBOARD
+          <span class="nav-badge">LIVE</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">#</span>
+          ACTIVITIES
+          <span class="nav-badge">42</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">*</span>
+          GOALS
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">!</span>
+          VERIFY QUEUE
+          <span class="nav-badge">5</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">^</span>
+          LEADERBOARD
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">~</span>
+          TEAM TREE
+        </div>
+      </nav>
+
+      <div class="sidebar-section-label">// SYSTEM</div>
+
+      <nav>
+        <div class="nav-item">
+          <span class="nav-icon">@</span>
+          AI COACH
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">$</span>
+          ADMIN PANEL
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">%</span>
+          PROFILE
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <span>CONNECTED · NODE-07</span>
+      </div>
+    </aside>
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-title"><span>[</span> DASHBOARD <span>]</span></div>
+      <div class="topbar-right">
+        <div class="topbar-status">ONLINE · SECURE</div>
+        <div class="topbar-clock">14:32:00</div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <div class="section-header">
+        <h2>// OPERATIONAL OVERVIEW</h2>
+      </div>
+
+      <!-- STAT BLOCKS -->
+      <div class="stats-row">
+        <div class="stat-block">
+          <div class="stat-label">ACTIVITIES</div>
+          <div class="stat-value accent">42</div>
+          <div class="stat-delta up">+7 THIS WEEK</div>
+          <div class="stat-icon">ACT</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">VERIFIED RATE</div>
+          <div class="stat-value">78%</div>
+          <div class="stat-delta up">+3% VS LAST</div>
+          <div class="stat-icon">VRF</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">LEADERBOARD</div>
+          <div class="stat-value accent">#3</div>
+          <div class="stat-delta">&uarr; 2 POSITIONS</div>
+          <div class="stat-icon">LDR</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">PENDING</div>
+          <div class="stat-value">5</div>
+          <div class="stat-delta warn">AWAITING REVIEW</div>
+          <div class="stat-icon">PND</div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY LOG TABLE -->
+      <div class="section-header">
+        <h2>// ACTIVITY LOG</h2>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>RECENT OPERATIONS</h3>
+          <span class="count-tag">4 ENTRIES</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>AGENT</th>
+              <th>ACTIVITY TYPE</th>
+              <th>TIMESTAMP</th>
+              <th>PTS</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#ACT-0041</td>
+              <td>SGT. REYES</td>
+              <td>FIELD RECON REPORT</td>
+              <td>14:18:44</td>
+              <td>+120</td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0040</td>
+              <td>CPL. MASON</td>
+              <td>EQUIPMENT AUDIT</td>
+              <td>13:55:02</td>
+              <td>+80</td>
+              <td><span class="badge badge-pending">PENDING</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0039</td>
+              <td>PVT. CHEN</td>
+              <td>TRAINING DRILL LOG</td>
+              <td>13:30:17</td>
+              <td>+60</td>
+              <td><span class="badge badge-active">ACTIVE</span></td>
+            </tr>
+            <tr>
+              <td>#ACT-0038</td>
+              <td>LT. HAYES</td>
+              <td>INCIDENT REPORT</td>
+              <td>12:47:33</td>
+              <td>+0</td>
+              <td><span class="badge badge-flagged">FLAGGED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RANK PROGRESSION -->
+      <div class="section-header">
+        <h2>// RANK PROGRESSION</h2>
+      </div>
+
+      <div class="rank-section">
+        <div class="rank-header">
+          <div class="rank-title">RANK STATUS</div>
+          <div class="rank-label">CYCLE: APR 2026</div>
+        </div>
+
+        <div class="rank-current">
+          <div class="rank-badge-large"><span>E5</span></div>
+          <div class="rank-info">
+            <div class="rank-name">SERGEANT FIRST CLASS</div>
+            <div class="rank-pts">2,840 / 3,950 POINTS TO NEXT RANK</div>
+          </div>
+        </div>
+
+        <div class="rank-next">
+          <span>CURRENT: 2,840 PTS</span>
+          <span class="pct">72%</span>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+
+        <div class="rank-milestones">
+          <div class="milestone">
+            <div class="milestone-label">ACTIVITIES</div>
+            <div class="milestone-val">42</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">STREAK</div>
+            <div class="milestone-val">14D</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">COMMENDATIONS</div>
+            <div class="milestone-val">7</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">MISSIONS</div>
+            <div class="milestone-val">23</div>
+          </div>
+          <div class="milestone">
+            <div class="milestone-label">ACCURACY</div>
+            <div class="milestone-val">91%</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>
