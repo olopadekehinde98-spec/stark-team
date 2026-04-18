@@ -9,7 +9,7 @@ export async function POST(
   { params: _params }: { params: Promise<{ activityId: string }> }
 ) {
   const params = await _params
-  const supabase      = createClient()
+  const supabase      = await createClient()
   const adminSupabase = createAdminClient()
 
   const { data: { user } } = await supabase.auth.getUser()
