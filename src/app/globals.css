@@ -37,7 +37,17 @@
   --danger:   #ef4444;
   --info:     #3b82f6;
 
-  --gold:     #f59e0b;
+  --gold:         #f59e0b;
+  --gold-light:   #fbbf24;
+  --gold-dim:     rgba(245,158,11,0.10);
+  --gold-border:  rgba(245,158,11,0.22);
+  --cyan:         #06b6d4;
+  --cyan-dim:     rgba(6,182,212,0.08);
+  --cyan-border:  rgba(6,182,212,0.20);
+  --text-primary:   #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-muted:     #9ca3af;
+  --text-faint:     #4b5563;
 }
 
 /* ── RESET ───────────────────────────────────────── */
