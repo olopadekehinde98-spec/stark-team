@@ -55,12 +55,13 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [profileRes, actsRes, goalsRes, leaderRes, recentRes] = await Promise.all([
+      const [profileRes, actsRes, goalsRes, leaderRes, recentRes, pinnedRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,branch_id').eq('id', user.id).single(),
         supabase.from('activities').select('status').eq('user_id', user.id),
         supabase.from('goals').select('title,status,target_value,current_value,deadline').eq('user_id', user.id).limit(3),
         supabase.from('leaderboard_entries').select('rank,score,users(full_name,rank)').order('rank').limit(5),
         supabase.from('activities').select('title,activity_type,status,submitted_at').eq('user_id', user.id).order('submitted_at', { ascending: false }).limit(4),
+        fetch('/api/announcements').then(r => r.json()),
       ])
 
       const acts = actsRes.data ?? []
@@ -77,6 +78,7 @@ export default function DashboardPage() {
         goals: goalsRes.data ?? [],
         leaders: leaderRes.data ?? [],
         recent: recentRes.data ?? [],
+        pinned: Array.isArray(pinnedRes) ? pinnedRes : [],
       })
       setLoading(false)
     }
@@ -100,6 +102,29 @@ export default function DashboardPage() {
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: '#4b5563', textTransform: 'uppercase', marginBottom: 20 }}>
         Overview — {monthLabel}
       </div>
+
+      {/* ── PINNED ANNOUNCEMENTS ── */}
+      {data.pinned.length > 0 && (
+        <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {data.pinned.map((a: any) => (
+            <div key={a.id} style={{
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06))',
+              border: '1px solid rgba(99,102,241,0.25)',
+              borderRadius: 12, padding: '14px 18px',
+              display: 'flex', alignItems: 'flex-start', gap: 14,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>📌</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>{a.title}</div>
+                <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{a.body}</div>
+                <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6 }}>
+                  {a.author?.full_name ?? 'Admin'} · {new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── STATS ROW ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
