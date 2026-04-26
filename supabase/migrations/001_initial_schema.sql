@@ -416,3 +416,43 @@ CREATE POLICY "activity_templates_read"
 -- ANNOUNCEMENTS: Readable by all authenticated
 CREATE POLICY "announcements_read"
   ON announcements FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- ============================================================
+-- AUTH TRIGGER — sync Supabase Auth users → public.users
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  _username text;
+BEGIN
+  -- derive a unique username from email or metadata
+  _username := COALESCE(
+    NEW.raw_user_meta_data->>'username',
+    LOWER(REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-z0-9_]', '_', 'g'))
+  );
+  -- ensure uniqueness by appending a short id suffix if taken
+  IF EXISTS (SELECT 1 FROM public.users WHERE username = _username) THEN
+    _username := _username || '_' || SUBSTRING(NEW.id::text FROM 1 FOR 6);
+  END IF;
+
+  INSERT INTO public.users (
+    id, email, full_name, username, role, rank, is_active, created_at
+  ) VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
+    _username,
+    COALESCE(NEW.raw_user_meta_data->>'role', 'member'),
+    COALESCE(NEW.raw_user_meta_data->>'rank', 'distributor'),
+    true,
+    NOW()
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

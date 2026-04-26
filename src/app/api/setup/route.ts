@@ -3,59 +3,60 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * POST /api/setup
- * Bootstrap the very first admin account.
- * Protected by SETUP_SECRET (falls back to CRON_SECRET).
- * Fails if an admin already exists — one-time use only.
+ * Bootstraps the very first admin account.
+ * Only works when the public.users table is completely empty.
  */
+export async function GET() {
+  const admin = createAdminClient()
+  const { count } = await admin.from('users').select('*', { count: 'exact', head: true })
+  return NextResponse.json({ setupRequired: count === 0 })
+}
+
 export async function POST(req: NextRequest) {
-  const { email, password, full_name, username, setup_key } = await req.json()
-
-  // Verify setup secret
-  const secret = process.env.SETUP_SECRET ?? process.env.CRON_SECRET
-  if (!secret || setup_key !== secret) {
-    return NextResponse.json({ error: 'Invalid setup key' }, { status: 403 })
-  }
-
-  if (!email || !password || !full_name || !username) {
-    return NextResponse.json({ error: 'email, password, full_name and username are required' }, { status: 400 })
-  }
-
   const admin = createAdminClient()
 
-  // Prevent re-running if an admin already exists
-  const { data: existing } = await admin.from('users').select('id').eq('role', 'admin').limit(1)
-  if (existing && existing.length > 0) {
-    return NextResponse.json({ error: 'Setup already complete. An admin account already exists.' }, { status: 409 })
+  // Block if any users already exist
+  const { count } = await admin.from('users').select('*', { count: 'exact', head: true })
+  if ((count ?? 0) > 0) {
+    return NextResponse.json(
+      { error: 'Setup already completed. Use an invite link to join.' },
+      { status: 403 }
+    )
   }
 
-  // Create Supabase Auth user — email_confirm:true skips confirmation email
+  const body = await req.json()
+  const { email, password, fullName, username } = body
+
+  if (!email || !password || !fullName || !username) {
+    return NextResponse.json({ error: 'All fields are required.' }, { status: 400 })
+  }
+  if (password.length < 8) {
+    return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 })
+  }
+
+  // Create Supabase auth user with admin role metadata
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name, username },
+    user_metadata: { full_name: fullName, username, role: 'admin', rank: 'director' },
   })
+  if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
 
-  if (authError || !authData.user) {
-    return NextResponse.json({ error: authError?.message ?? 'Failed to create auth user' }, { status: 400 })
-  }
+  const userId = authData.user.id
 
-  // Insert directly into users table as admin (bypass trigger's default role)
-  const { error: dbError } = await admin.from('users').upsert({
-    id: authData.user.id,
+  // Upsert profile (trigger may have already run)
+  const { error: profileError } = await admin.from('users').upsert({
+    id: userId,
     email,
-    full_name,
-    username,
+    full_name: fullName,
+    username: username.toLowerCase().replace(/\s/g, '_'),
     role: 'admin',
     rank: 'director',
     is_active: true,
-  })
+  }, { onConflict: 'id' })
 
-  if (dbError) {
-    // Roll back auth user
-    await admin.auth.admin.deleteUser(authData.user.id)
-    return NextResponse.json({ error: dbError.message }, { status: 400 })
-  }
+  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
 
-  return NextResponse.json({ ok: true, message: 'Admin account created. You can now log in.' })
+  return NextResponse.json({ success: true })
 }
