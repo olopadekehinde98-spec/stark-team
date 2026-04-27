@@ -8,44 +8,59 @@ import { useEffect, useState } from 'react'
 function LiveClock() {
   const [time, setTime] = useState('')
   useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+    const tick = () => setTime(
+      new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    )
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
-  return <span className="clock">{time}</span>
+  return (
+    <span style={{
+      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: 12, color: '#6366f1', letterSpacing: '0.06em',
+      background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.20)',
+      padding: '4px 10px', borderRadius: 6,
+    }}>{time || '--:--:--'}</span>
+  )
 }
 
-function Sidebar({ userName, userRank, pendingCount }: { userName?: string; userRank?: string; pendingCount: number }) {
-  const pathname = usePathname()
-  const router = useRouter()
+const NAV = [
+  {
+    label: 'Main',
+    items: [
+      { label: 'Dashboard',   href: '/dashboard',   icon: '▦' },
+      { label: 'Activities',  href: '/activities',  icon: '⚡' },
+      { label: 'Goals',       href: '/goals',       icon: '◎' },
+      { label: 'Leaderboard', href: '/leaderboard', icon: '▲' },
+    ],
+  },
+  {
+    label: 'Team',
+    items: [
+      { label: 'Verify Queue', href: '/verify',  icon: '✓', badge: true },
+      { label: 'Team Tree',    href: '/team',    icon: '◈' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { label: 'AI Coach',    href: '/ai-coach',        icon: '◆' },
+      { label: 'Admin Panel', href: '/admin/dashboard', icon: '⚙' },
+      { label: 'Profile',     href: '/profile',         icon: '▣' },
+    ],
+  },
+]
 
-  const navSections = [
-    {
-      label: 'Main',
-      items: [
-        { label: 'Dashboard',   href: '/dashboard',   icon: '⊞' },
-        { label: 'Activities',  href: '/activities',  icon: '⚡' },
-        { label: 'Goals',       href: '/goals',       icon: '◎' },
-        { label: 'Leaderboard', href: '/leaderboard', icon: '▲' },
-      ],
-    },
-    {
-      label: 'Team',
-      items: [
-        { label: 'Verify Queue', href: '/verify', icon: '✓', badge: pendingCount },
-        { label: 'Team Tree',    href: '/team',   icon: '◈' },
-      ],
-    },
-    {
-      label: 'Tools',
-      items: [
-        { label: 'AI Coach',    href: '/ai-coach',        icon: '◆' },
-        { label: 'Admin Panel', href: '/admin/dashboard', icon: '⚙' },
-        { label: 'Profile',     href: '/profile',         icon: '▣' },
-      ],
-    },
-  ]
+function Sidebar({ userName, userRole, userRank, pendingCount }: {
+  userName?: string; userRole?: string; userRank?: string; pendingCount: number
+}) {
+  const pathname = usePathname()
+  const router   = useRouter()
+
+  const initials = userName
+    ? userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '??'
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -53,40 +68,53 @@ function Sidebar({ userName, userRank, pendingCount }: { userName?: string; user
     router.push('/login')
   }
 
-  const initials = userName
-    ? userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-    : '??'
-
   return (
-    <div style={{
-      width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column',
-      background: '#111827', borderRight: '1px solid #1f2937',
+    <aside style={{
+      width: 248, flexShrink: 0,
+      display: 'flex', flexDirection: 'column',
+      background: '#0d1117',
+      borderRight: '1px solid rgba(99,102,241,0.12)',
+      position: 'relative',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1f2937' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <div style={{
-            filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.4))',
-          }}>
-            <Image src="/stark-logo.png" alt="Stark Team" width={130} height={87} priority style={{ display: 'block' }} />
-          </div>
+      {/* Subtle left glow stripe */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, bottom: 0, width: 2,
+        background: 'linear-gradient(180deg, transparent 0%, #6366f1 30%, #8b5cf6 70%, transparent 100%)',
+        opacity: 0.5,
+      }} />
+
+      {/* Logo area */}
+      <div style={{
+        padding: '22px 20px 18px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+      }}>
+        <div style={{
+          filter: 'drop-shadow(0 0 16px rgba(99,102,241,0.5))',
+          marginBottom: 14,
+        }}>
+          <Image src="/stark-logo.png" alt="Stark Team" width={140} height={94} priority style={{ display: 'block' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div className="dot-active" />
-          <span style={{ fontSize: 10, color: '#10b981', fontWeight: 600, letterSpacing: '0.06em' }}>
+          <div style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 8px #10b981',
+            animation: 'pulse-green 2s ease-in-out infinite',
+          }} />
+          <span style={{ fontSize: 10, color: '#10b981', fontWeight: 700, letterSpacing: '0.10em' }}>
             SYSTEMS ONLINE
           </span>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 12px' }}>
-        {navSections.map(section => (
-          <div key={section.label} style={{ marginBottom: 8 }}>
+      {/* Navigation */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '14px 12px' }}>
+        {NAV.map(section => (
+          <div key={section.label} style={{ marginBottom: 6 }}>
             <div style={{
-              fontSize: 10, fontWeight: 600, color: '#4b5563',
-              letterSpacing: '0.10em', textTransform: 'uppercase',
-              padding: '6px 8px 6px',
+              fontSize: 9, fontWeight: 700, color: '#374151',
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              padding: '5px 8px 7px',
             }}>
               {section.label}
             </div>
@@ -94,22 +122,44 @@ function Sidebar({ userName, userRank, pendingCount }: { userName?: string; user
               const isActive = pathname === item.href ||
                 (item.href !== '/dashboard' && pathname.startsWith(item.href))
               return (
-                <Link key={item.href} href={item.href}
-                  className={`nav-item${isActive ? ' active' : ''}`}
-                  style={{ position: 'relative' }}
-                >
-                  <span style={{ fontSize: 15, width: 18, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
-                  <span>{item.label}</span>
-                  {'badge' in item && (item.badge ?? 0) > 0 && (
-                    <span style={{
-                      marginLeft: 'auto',
-                      background: '#6366f1',
+                <Link key={item.href} href={item.href} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 10px', borderRadius: 9,
+                  marginBottom: 2, textDecoration: 'none',
+                  transition: 'all 0.12s',
+                  position: 'relative',
+                  ...(isActive ? {
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))',
+                    boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.25)',
+                  } : {
+                    background: 'transparent',
+                  }),
+                }}>
+                  <span style={{
+                    width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 14, transition: 'all 0.12s',
+                    ...(isActive ? {
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                       color: '#fff',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      borderRadius: 10,
-                      padding: '1px 6px',
-                    }}>{item.badge}</span>
+                      boxShadow: '0 2px 10px rgba(99,102,241,0.4)',
+                    } : {
+                      background: '#1f2937',
+                      color: '#6b7280',
+                    }),
+                  }}>{item.icon}</span>
+                  <span style={{
+                    fontSize: 13.5, fontWeight: isActive ? 600 : 500,
+                    color: isActive ? '#c4b5fd' : '#9ca3af',
+                    flex: 1,
+                  }}>{item.label}</span>
+                  {'badge' in item && item.badge && pendingCount > 0 && (
+                    <span style={{
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                      color: '#fff', fontSize: 10, fontWeight: 700,
+                      borderRadius: 10, padding: '1px 7px',
+                      boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
+                    }}>{pendingCount}</span>
                   )}
                 </Link>
               )
@@ -118,51 +168,60 @@ function Sidebar({ userName, userRank, pendingCount }: { userName?: string; user
         ))}
       </nav>
 
-      {/* User Card */}
-      <div style={{ borderTop: '1px solid #1f2937', padding: '12px 12px 14px' }}>
+      {/* User card */}
+      <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.10), rgba(139,92,246,0.06))',
+          border: '1px solid rgba(99,102,241,0.18)',
+          borderRadius: 10, padding: '10px 12px',
           display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 10px', borderRadius: 10,
-          background: '#1f2937', cursor: 'pointer',
         }}>
-          <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>{initials}</div>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, fontWeight: 800, color: '#fff',
+            boxShadow: '0 0 12px rgba(99,102,241,0.4)',
+          }}>{initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontSize: 13, fontWeight: 600, color: '#e2e8f0',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>{userName ?? 'Operative'}</div>
             <div style={{
-              fontSize: 11, color: '#6b7280',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              fontSize: 10, color: '#6366f1', fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.06em',
             }}>{userRank?.replace(/_/g, ' ') ?? 'Member'}</div>
           </div>
           <button onClick={handleSignOut} title="Sign out" style={{
             background: 'transparent', border: 'none', cursor: 'pointer',
-            fontSize: 14, color: '#4b5563', padding: 4, transition: 'color 0.15s', flexShrink: 0,
+            fontSize: 16, color: '#374151', padding: 4,
+            transition: 'color 0.15s', flexShrink: 0,
           }}
             onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#4b5563')}
-          >✕</button>
+            onMouseLeave={e => (e.currentTarget.style.color = '#374151')}
+          >⏻</button>
         </div>
       </div>
-    </div>
+    </aside>
   )
 }
 
-function TopBar() {
-  const pathname = usePathname()
-  const segments = pathname.split('/').filter(Boolean)
-  const rawTitle = segments[segments.length - 1] ?? 'dashboard'
-  const pageTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1).replace(/-/g, ' ')
-
+function TopBar({ pageTitle }: { pageTitle: string }) {
   return (
-    <div style={{
-      height: 58, flexShrink: 0,
-      background: '#111827', borderBottom: '1px solid #1f2937',
+    <header style={{
+      height: 60, flexShrink: 0,
+      background: '#0d1117',
+      borderBottom: '1px solid rgba(99,102,241,0.10)',
       display: 'flex', alignItems: 'center',
-      padding: '0 24px', gap: 12,
+      padding: '0 28px', gap: 16,
     }}>
-      <div className="topbar-title">{pageTitle}</div>
+      {/* Breadcrumb */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>STARK TEAM</span>
+        <span style={{ color: '#1f2937', fontSize: 14 }}>›</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.01em' }}>{pageTitle}</span>
+      </div>
       <div style={{ flex: 1 }} />
       <LiveClock />
       {[
@@ -171,57 +230,91 @@ function TopBar() {
       ].map(btn => (
         <Link key={btn.href} href={btn.href} title={btn.title} style={{
           width: 36, height: 36, borderRadius: 8,
-          background: '#1f2937', border: '1px solid #374151',
+          background: '#111827', border: '1px solid #1f2937',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, textDecoration: 'none', color: '#9ca3af',
-          transition: 'background 0.15s, color 0.15s',
+          fontSize: 15, textDecoration: 'none', color: '#4b5563',
+          transition: 'all 0.15s',
         }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.background = '#374151'
-            ;(e.currentTarget as HTMLElement).style.color = '#e2e8f0'
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.4)'
+            ;(e.currentTarget as HTMLElement).style.color = '#818cf8'
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.background = '#1f2937'
-            ;(e.currentTarget as HTMLElement).style.color = '#9ca3af'
+            (e.currentTarget as HTMLElement).style.borderColor = '#1f2937'
+            ;(e.currentTarget as HTMLElement).style.color = '#4b5563'
           }}
         >{btn.icon}</Link>
       ))}
-    </div>
+    </header>
   )
 }
 
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
+  const [mounted, setMounted]     = useState(false)
+  const [profile, setProfile]     = useState<any>(null)
   const [pendingCount, setPending] = useState(0)
+  const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
     const supabase = createClient()
-    const loadProfile = async () => {
+    ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const [profileRes, pendingRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),
+        supabase.from('users').select('full_name,rank,role').eq('id', user.id).single(),
         supabase.from('activities').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       ])
       setProfile(profileRes.data)
       setPending(pendingRes.count ?? 0)
-    }
-    loadProfile()
+    })()
   }, [])
 
-  if (!mounted) return null
+  const segments  = pathname.split('/').filter(Boolean)
+  const rawTitle  = segments[segments.length - 1] ?? 'dashboard'
+  const pageTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1).replace(/-/g, ' ')
+
+  if (!mounted) return (
+    <div style={{
+      minHeight: '100vh', background: '#0b0f1a',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%',
+          border: '3px solid rgba(99,102,241,0.2)',
+          borderTop: '3px solid #6366f1',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <span style={{ fontSize: 12, color: '#4b5563', letterSpacing: '0.1em' }}>LOADING...</span>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0b0f1a' }}>
-      <Sidebar userName={profile?.full_name} userRank={profile?.rank} pendingCount={pendingCount} />
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-        <TopBar />
-        <main style={{ flex: 1, overflowY: 'auto', background: '#0b0f1a' }}>
-          {children}
-        </main>
+    <>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-green {
+          0%, 100% { box-shadow: 0 0 4px #10b981; }
+          50%       { box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16,185,129,0.3); }
+        }
+      `}</style>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#0b0f1a' }}>
+        <Sidebar
+          userName={profile?.full_name}
+          userRole={profile?.role}
+          userRank={profile?.rank}
+          pendingCount={pendingCount}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+          <TopBar pageTitle={pageTitle} />
+          <main style={{ flex: 1, overflowY: 'auto', background: '#0b0f1a' }}>
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
