@@ -15,10 +15,16 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setError(error.message); setLoading(false); return }
-    router.push('/dashboard')
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) { setError(error.message); setLoading(false); return }
+      router.refresh()
+      router.push('/dashboard')
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
