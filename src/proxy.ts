@@ -39,7 +39,8 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && !PUBLIC_ROUTES.some(r => path.startsWith(r))) {
+  // API routes handle their own auth — never redirect them to /login
+  if (!user && !PUBLIC_ROUTES.some(r => path.startsWith(r)) && !path.startsWith('/api')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
