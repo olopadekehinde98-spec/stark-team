@@ -162,11 +162,16 @@ export default function LoginPage() {
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <label style={{
-              display: 'block', marginBottom: 7, fontSize: 11,
-              fontWeight: 700, color: '#4b5563',
-              textTransform: 'uppercase', letterSpacing: '0.10em',
-            }}>Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+              <label style={{
+                fontSize: 11,
+                fontWeight: 700, color: '#4b5563',
+                textTransform: 'uppercase', letterSpacing: '0.10em',
+              }}>Password</label>
+              <a href="/forgot-password" style={{ fontSize: 11, color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>
+                Forgot password?
+              </a>
+            </div>
             <input
               type="password" required value={password}
               onChange={e => setPassword(e.target.value)}

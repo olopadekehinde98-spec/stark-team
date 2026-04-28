@@ -136,10 +136,13 @@ export default function VerifyQueueClient({
   async function handleAction(id: string, action: 'verify' | 'reject' | 'skip', notes?: string) {
     if (action === 'skip') { setQueue(q => q.filter(a => a.id !== id)); return }
     setProcessing(id)
-    const supabase = createClient()
+    // reject route requires rejection_reason field
+    const body = action === 'reject'
+      ? { rejection_reason: notes || 'No reason provided', notes }
+      : { notes }
     await fetch(`/api/verification/${id}/${action}`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ verifier_id: currentUserId, notes }),
+      body: JSON.stringify(body),
     })
     setQueue(q => q.filter(a => a.id !== id))
     setProcessing(null)

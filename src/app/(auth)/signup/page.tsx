@@ -51,13 +51,30 @@ function SignupForm() {
     setError('')
     setLoading(true)
     const supabase = createClient()
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName, username, invite_token: token } },
     })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
-    router.push('/dashboard')
+
+    // If Supabase returned a session the user is confirmed → go straight to dashboard
+    // If no session, email confirmation is required → show instructions
+    if (data.session) {
+      router.push('/dashboard')
+    } else {
+      // Auto sign-in after registration (works when email confirm is OFF)
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError) {
+        router.push('/dashboard')
+      } else {
+        // Email confirmation is ON — tell the user to check their inbox
+        setError(
+          '✅ Account created! Check your email inbox and click the confirmation link, then come back to log in.'
+        )
+        setLoading(false)
+      }
+    }
   }
 
   const rankMap: Record<string, string> = {
