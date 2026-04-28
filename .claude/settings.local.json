@@ -3,7 +3,33 @@
     "allow": [
       "mcp__Claude_Preview__preview_start",
       "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__list_projects",
-      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__execute_sql"
+      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__execute_sql",
+      "Bash(npx tsc *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(Start-Sleep -Seconds 8)",
+      "Bash(Write-Output \"waited\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\" \"http://localhost:3000/demo\")",
+      "Bash(curl -v \"http://localhost:3000/demo\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/demo\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "mcp__4ac08bb8-f730-4d0c-81b5-dce871836d4d__deploy_to_vercel",
+      "mcp__4ac08bb8-f730-4d0c-81b5-dce871836d4d__list_teams",
+      "mcp__4ac08bb8-f730-4d0c-81b5-dce871836d4d__list_projects",
+      "mcp__4ac08bb8-f730-4d0c-81b5-dce871836d4d__list_deployments",
+      "mcp__4ac08bb8-f730-4d0c-81b5-dce871836d4d__get_deployment",
+      "Bash(npm install *)",
+      "Bash(vercel deploy *)",
+      "Bash(npx vercel *)",
+      "Bash(vercel --prod --yes)",
+      "Bash(where vercel *)",
+      "Bash(node_modules\\\\.bin\\\\vercel --version)",
+      "Bash(npx --yes vercel --version)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k\\) for k in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}.keys\\(\\)]\")",
+      "Bash(cat .env.local)",
+      "Bash(cat .env)",
+      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__apply_migration"
     ]
   }
 }

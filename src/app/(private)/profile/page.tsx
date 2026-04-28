@@ -37,6 +37,7 @@ export default function ProfilePage() {
   const [inviteExp,  setInviteExp]  = useState('')
   const [copiedInv,  setCopiedInv]  = useState(false)
   const [regenLoading, setRegenLoading] = useState(false)
+  const [showQrModal,  setShowQrModal]  = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const loadProfile = useCallback(async () => {
@@ -148,9 +149,40 @@ export default function ProfilePage() {
     border:    `1px solid ${s==='verified' ? S.okBd : s==='pending' ? '#BFDBFE' : '#FCA5A5'}`,
   })
 
+  const qrSrc = inviteUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=${encodeURIComponent(inviteUrl)}`
+    : ''
+
   return (
     <div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+
+      {/* QR modal */}
+      {showQrModal && inviteUrl && (
+        <div style={{ position:'fixed', inset:0, zIndex:300, background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center' }}
+          onClick={() => setShowQrModal(false)}>
+          <div style={{ background:'#fff', borderRadius:18, padding:32, maxWidth:320, width:'90%', textAlign:'center', boxShadow:'0 24px 64px rgba(0,0,0,0.3)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize:15, fontWeight:800, color:S.navy, marginBottom:4 }}>My Team Invite QR</div>
+            <div style={{ fontSize:12, color:S.tx2, marginBottom:18 }}>Scan to join your downline</div>
+            <div style={{ background:'#fff', borderRadius:12, padding:10, display:'inline-block', border:`2px solid ${S.goldBd}` }}>
+              <img src={qrSrc} alt="My QR Code" width={220} height={220} style={{ display:'block' }} />
+            </div>
+            <div style={{ marginTop:14, fontSize:11, color:S.mu, wordBreak:'break-all', fontFamily:"'JetBrains Mono',monospace", lineHeight:1.5 }}>
+              {inviteUrl.slice(0,50)}…
+            </div>
+            <div style={{ marginTop:16, display:'flex', gap:8, justifyContent:'center' }}>
+              <a href={qrSrc} download="my-team-invite-qr.png" target="_blank" rel="noreferrer"
+                style={{ padding:'9px 20px', borderRadius:8, fontSize:12, fontWeight:700, background:S.navy, color:'#fff', textDecoration:'none' }}>
+                ⬇️ Download QR
+              </a>
+              <button onClick={() => setShowQrModal(false)} style={{ padding:'9px 18px', borderRadius:8, fontSize:12, fontWeight:600, background:'#F1F5F9', color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero banner ── */}
       <div style={{ background:S.navy, borderRadius:12, padding:'28px 28px 24px', marginBottom:18, position:'relative', overflow:'hidden' }}>
@@ -275,29 +307,35 @@ export default function ProfilePage() {
         </div>
 
         {inviteUrl ? (
-          <>
-            <div style={{
-              background:'rgba(255,255,255,0.7)', border:`1px solid ${S.goldBd}`, borderRadius:8,
-              padding:'10px 14px', fontSize:12, color:S.navy,
-              fontFamily:"'JetBrains Mono',monospace", wordBreak:'break-all', marginBottom:12, lineHeight:1.6,
-            }}>
-              {inviteUrl}
-            </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <button onClick={copyInvite} style={{
-                padding:'8px 18px', borderRadius:8, fontSize:12, fontWeight:700,
-                background: copiedInv ? S.ok : S.navy, color:'#fff', border:'none', cursor:'pointer',
+          <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:16, alignItems:'start' }}>
+            <div>
+              <div style={{
+                background:'rgba(255,255,255,0.7)', border:`1px solid ${S.goldBd}`, borderRadius:8,
+                padding:'10px 14px', fontSize:11, color:S.navy,
+                fontFamily:"'JetBrains Mono',monospace", wordBreak:'break-all', marginBottom:12, lineHeight:1.6,
               }}>
-                {copiedInv ? '✓ Copied!' : '📋 Copy Link'}
-              </button>
-              <button onClick={emailInvite} style={{
-                padding:'8px 18px', borderRadius:8, fontSize:12, fontWeight:700,
-                background:'transparent', color:S.navy, border:`1px solid ${S.goldBd}`, cursor:'pointer',
-              }}>
-                ✉️ Send via Email
-              </button>
+                {inviteUrl}
+              </div>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                <button onClick={copyInvite} style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background: copiedInv ? S.ok : S.navy, color:'#fff', border:'none', cursor:'pointer' }}>
+                  {copiedInv ? '✓ Copied!' : '📋 Copy Link'}
+                </button>
+                <button onClick={emailInvite} style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'transparent', color:S.navy, border:`1px solid ${S.goldBd}`, cursor:'pointer' }}>
+                  ✉️ Email
+                </button>
+                <button onClick={() => setShowQrModal(true)} style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'#EFF6FF', color:'#2563EB', border:'1px solid #BFDBFE', cursor:'pointer' }}>
+                  📱 My QR Code
+                </button>
+              </div>
             </div>
-          </>
+            {/* Mini QR preview */}
+            <div style={{ cursor:'pointer', flexShrink:0 }} onClick={() => setShowQrModal(true)} title="Click to enlarge">
+              <div style={{ background:'#fff', borderRadius:8, padding:5, border:`1px solid ${S.goldBd}`, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+                <img src={qrSrc} alt="QR" width={72} height={72} style={{ display:'block' }} />
+              </div>
+              <div style={{ fontSize:10, color:S.mu, textAlign:'center', marginTop:4 }}>Tap to enlarge</div>
+            </div>
+          </div>
         ) : (
           <div style={{ fontSize:13, color:S.mu }}>Loading your invite link…</div>
         )}
