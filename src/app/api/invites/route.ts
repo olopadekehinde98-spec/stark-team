@@ -9,7 +9,7 @@ export async function GET() {
   const { data: profile } = await supabase.from('users').select('role').eq('id',user.id).single()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const admin = createAdminClient()
-  const { data } = await admin.from('invite_links').select('id,assigned_role,assigned_rank,assigned_email,expires_at,is_active,used_by,created_at').order('created_at',{ascending:false}).limit(20)
+  const { data } = await admin.from('invite_links').select('id,token,assigned_role,assigned_rank,assigned_email,expires_at,is_active,used_by,created_at').order('created_at',{ascending:false}).limit(20)
   return NextResponse.json({ invites: data })
 }
 
