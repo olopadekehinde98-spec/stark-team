@@ -15,6 +15,19 @@ const NAV_LINKS = [
   { label: 'Notifications',href: '/notifications'    },
 ]
 
+// Neolife rank display names
+function fmtRank(rank?: string) {
+  const map: Record<string, string> = {
+    distributor:       'Distributor',
+    manager:           'Manager',
+    senior_manager:    'Senior Manager',
+    executive_manager: 'Executive',
+    director:          'Director',
+  }
+  if (!rank) return 'Member'
+  return map[rank] ?? rank.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 const S = {
   navy: '#0F1C2E',
   gold: '#D4A017',
@@ -57,9 +70,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
     ? profile.full_name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
     : '??'
 
-  const rankLabel = profile?.rank
-    ? profile.rank.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-    : 'Member'
+  const rankLabel = fmtRank(profile?.rank)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: S.bg }}>
@@ -96,6 +107,19 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
               }}>{link.label}</Link>
             )
           })}
+          {/* Admin-only link */}
+          {profile?.role === 'admin' && (() => {
+            const isActive = pathname.startsWith('/admin')
+            return (
+              <Link href="/admin/dashboard" style={{
+                padding: '7px 14px', fontSize: 13, fontWeight: 600, borderRadius: 6,
+                color: isActive ? S.gold : S.gold,
+                background: isActive ? 'rgba(212,160,23,0.18)' : 'rgba(212,160,23,0.10)',
+                border: `1px solid rgba(212,160,23,0.25)`,
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}>⚡ Admin</Link>
+            )
+          })()}
         </div>
 
         {/* Right side */}

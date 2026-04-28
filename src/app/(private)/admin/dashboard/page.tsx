@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: myProfile } = await supabase.from('users').select('role').eq('id', user.id).single()
+  const { data: myProfile } = await supabase.from('users').select('role,rank,full_name').eq('id', user.id).single()
   if (myProfile?.role !== 'admin') redirect('/dashboard')
 
   const [totalUsersRes, activeWeekRes, pendingRes, usersListRes, invitesRes] = await Promise.all([
@@ -49,10 +49,23 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom:22 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Admin Panel</h1>
-        <p style={{ fontSize:13, color:S.tx2 }}>Director · Full platform access</p>
-      </div>
+      {(() => {
+        const rankMap: Record<string,string> = {
+          distributor:'Distributor', manager:'Manager',
+          senior_manager:'Senior Manager', executive_manager:'Executive', director:'Director',
+        }
+        const rankDisplay = rankMap[myProfile?.rank ?? ''] ?? (myProfile?.rank?.replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()) ?? '')
+        return (
+          <div style={{ marginBottom:22 }}>
+            <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Admin Panel</h1>
+            <p style={{ fontSize:13, color:S.tx2 }}>
+              {myProfile?.full_name ?? 'Admin'}
+              {rankDisplay ? ` · ${rankDisplay}` : ''}
+              {' · Full platform access'}
+            </p>
+          </div>
+        )
+      })()}
 
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
