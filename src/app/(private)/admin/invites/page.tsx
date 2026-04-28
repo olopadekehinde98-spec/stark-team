@@ -33,12 +33,14 @@ function qrUrl(inviteUrl: string) {
 }
 
 export default function AdminInvitesPage() {
-  const [invites,  setInvites]  = useState<any[]>([])
-  const [creating, setCreating] = useState(false)
-  const [copied,   setCopied]   = useState<string | null>(null)
-  const [showQr,   setShowQr]   = useState<string | null>(null)
-  const [form,     setForm]     = useState({ role:'member', rank:'distributor', email:'', expires_days:'30' })
-  const [toast,    setToast]    = useState('')
+  const [invites,   setInvites]   = useState<any[]>([])
+  const [creating,  setCreating]  = useState(false)
+  const [copied,    setCopied]    = useState<string | null>(null)
+  const [showQr,    setShowQr]    = useState<string | null>(null)
+  const [deleting,  setDeleting]  = useState<string | null>(null)
+  const [confirmDel,setConfirmDel]= useState<string | null>(null)
+  const [form,      setForm]      = useState({ role:'member', rank:'distributor', email:'', expires_days:'30' })
+  const [toast,     setToast]     = useState('')
 
   const loadInvites = useCallback(async () => {
     const r = await fetch('/api/invites')
@@ -90,6 +92,20 @@ export default function AdminInvitesPage() {
     const subject = encodeURIComponent('You have been invited to join Stark Team')
     const body = encodeURIComponent(`Hi${inv.assigned_email ? '' : ' there'},\n\nYou've been invited to join Stark Team as a ${rank}!\n\nClick this link to sign up:\n${url}\n\nExpires ${fmtDate(inv.expires_at)}.`)
     window.open(`mailto:${inv.assigned_email ?? ''}?subject=${subject}&body=${body}`)
+  }
+
+  async function deleteInvite(id: string) {
+    setDeleting(id)
+    const r = await fetch(`/api/invites/${id}`, { method: 'DELETE' })
+    setDeleting(null)
+    setConfirmDel(null)
+    if (r.ok) {
+      setInvites(prev => prev.filter(i => i.id !== id))
+      flash('Invite link deleted')
+    } else {
+      const d = await r.json()
+      flash('Error: ' + (d.error ?? 'Failed to delete'))
+    }
   }
 
   function downloadQr(token: string) {
@@ -233,7 +249,7 @@ export default function AdminInvitesPage() {
                         <div style={{ background:S.s2, border:`1px solid ${S.bd}`, borderRadius:7, padding:'7px 10px', marginBottom:10, fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:S.tx2, wordBreak:'break-all', lineHeight:1.5 }}>
                           {url}
                         </div>
-                        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
                           <button onClick={() => copyLink(inv.token)} style={{ padding:'7px 14px', borderRadius:7, fontSize:12, fontWeight:700, background: isCopied ? S.ok : S.navy, color:'#fff', border:'none', cursor:'pointer' }}>
                             {isCopied ? '✓ Copied!' : '📋 Copy'}
                           </button>
@@ -245,6 +261,22 @@ export default function AdminInvitesPage() {
                           <button onClick={() => setShowQr(inv.token)} style={{ padding:'7px 14px', borderRadius:7, fontSize:12, fontWeight:700, background:S.blueBg, color:S.blue, border:`1px solid ${S.blueBd}`, cursor:'pointer' }}>
                             📱 QR Code
                           </button>
+                          {/* Delete */}
+                          {confirmDel === inv.id ? (
+                            <>
+                              <span style={{ fontSize:11, color:S.err, fontWeight:600 }}>Delete?</span>
+                              <button onClick={() => deleteInvite(inv.id)} disabled={deleting === inv.id} style={{ padding:'7px 12px', borderRadius:7, fontSize:12, fontWeight:700, background:S.errBg, color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
+                                {deleting === inv.id ? '…' : 'Yes, Delete'}
+                              </button>
+                              <button onClick={() => setConfirmDel(null)} style={{ padding:'7px 10px', borderRadius:7, fontSize:12, fontWeight:600, background:S.s3, color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <button onClick={() => setConfirmDel(inv.id)} style={{ padding:'7px 12px', borderRadius:7, fontSize:12, fontWeight:600, background:'transparent', color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
+                              🗑 Delete
+                            </button>
+                          )}
                         </div>
                       </div>
 

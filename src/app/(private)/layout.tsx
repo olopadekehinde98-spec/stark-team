@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'AI Coach',     href: '/ai-coach'         },
   { label: 'Recognition',  href: '/recognition'      },
   { label: 'Notifications',href: '/notifications'    },
+  { label: '❓ Help',      href: '/help'             },
 ]
 
 // Neolife rank display names

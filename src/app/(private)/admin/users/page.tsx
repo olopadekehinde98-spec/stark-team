@@ -48,11 +48,13 @@ function fmtDate(s?: string) {
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers]       = useState<any[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [search, setSearch]     = useState('')
-  const [saving, setSaving]     = useState<string | null>(null)
-  const [toast, setToast]       = useState('')
+  const [users, setUsers]         = useState<any[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
+  const [saving, setSaving]       = useState<string | null>(null)
+  const [toast, setToast]         = useState('')
+  const [confirmDel, setConfirmDel] = useState<string | null>(null)
+  const [deleting, setDeleting]   = useState<string | null>(null)
 
   useEffect(() => { loadUsers() }, [])
 
@@ -98,6 +100,20 @@ export default function AdminUsersPage() {
       flash('Error: ' + e.error)
     }
     setSaving(null)
+  }
+
+  async function deleteUser(userId: string) {
+    setDeleting(userId)
+    const r = await fetch(`/api/admin/users/${userId}/delete`, { method: 'DELETE' })
+    setDeleting(null)
+    setConfirmDel(null)
+    if (r.ok) {
+      setUsers(prev => prev.filter(u => u.id !== userId))
+      flash('User deleted')
+    } else {
+      const e = await r.json()
+      flash('Error: ' + (e.error ?? 'Failed to delete'))
+    }
   }
 
   function flash(msg: string) {
@@ -154,7 +170,7 @@ export default function AdminUsersPage() {
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:760 }}>
           <thead>
             <tr style={{ background:S.s2 }}>
-              {['Member','Email','Rank','Role','Status','Joined'].map(h => (
+              {['Member','Email','Rank','Role','Status','Joined',''].map(h => (
                 <th key={h} style={{ padding:'11px 16px', textAlign:'left', fontSize:11, fontWeight:700, color:S.mu, borderBottom:`1px solid ${S.bd}`, letterSpacing:'0.05em', textTransform:'uppercase' }}>
                   {h}
                 </th>
@@ -251,6 +267,27 @@ export default function AdminUsersPage() {
 
                   {/* Joined */}
                   <td style={{ padding:'12px 16px', fontSize:12, color:S.tx2 }}>{fmtDate(u.created_at)}</td>
+
+                  {/* Delete */}
+                  <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
+                    {confirmDel === u.id ? (
+                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <button onClick={() => deleteUser(u.id)} disabled={deleting === u.id}
+                          style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:700, background:S.errBg, color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
+                          {deleting === u.id ? '…' : 'Confirm'}
+                        </button>
+                        <button onClick={() => setConfirmDel(null)}
+                          style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:S.s3, color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDel(u.id)}
+                        style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:'transparent', color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
+                        🗑 Delete
+                      </button>
+                    )}
+                  </td>
                 </tr>
               )
             })}

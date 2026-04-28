@@ -6,10 +6,11 @@ import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail]       = useState('')
+  const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [showPw,   setShowPw]   = useState(false)
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -172,21 +173,27 @@ export default function LoginPage() {
                 Forgot password?
               </a>
             </div>
-            <input
-              type="password" required value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              style={{
-                width: '100%', padding: '11px 14px', fontSize: 13.5,
-                boxSizing: 'border-box', background: '#111827',
-                border: '1px solid #1f2937', borderRadius: 10,
-                color: '#f1f5f9', outline: 'none',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-                fontFamily: 'Inter, system-ui, sans-serif',
-              }}
-              onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)' }}
-              onBlur={e => { e.target.style.borderColor = '#1f2937'; e.target.style.boxShadow = 'none' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPw ? 'text' : 'password'} required value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                style={{
+                  width: '100%', padding: '11px 44px 11px 14px', fontSize: 13.5,
+                  boxSizing: 'border-box', background: '#111827',
+                  border: '1px solid #1f2937', borderRadius: 10,
+                  color: '#f1f5f9', outline: 'none',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+                onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)' }}
+                onBlur={e => { e.target.style.borderColor = '#1f2937'; e.target.style.boxShadow = 'none' }}
+              />
+              <button type="button" onClick={() => setShowPw(p => !p)}
+                style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'#4b5563', padding:0 }}>
+                {showPw ? '🙈' : '👁'}
+              </button>
+            </div>
           </div>
 
           <button

@@ -22,6 +22,7 @@ function SignupForm() {
   const [username,    setUsername]    = useState('')
   const [email,       setEmail]       = useState('')
   const [password,    setPassword]    = useState('')
+  const [showPw,      setShowPw]      = useState(false)
   const [error,       setError]       = useState('')
   const [loading,     setLoading]     = useState(false)
 
@@ -172,7 +173,14 @@ function SignupForm() {
               </div>
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:S.tx2, marginBottom:6 }}>Password</label>
-                <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} placeholder="Min. 8 characters" />
+                <div style={{ position:'relative' }}>
+                  <input type={showPw ? 'text' : 'password'} required minLength={8} value={password} onChange={e => setPassword(e.target.value)}
+                    style={{ ...inputStyle, paddingRight:44 }} placeholder="Min. 8 characters" />
+                  <button type="button" onClick={() => setShowPw(p => !p)}
+                    style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:S.mu, padding:0 }}>
+                    {showPw ? '🙈' : '👁'}
+                  </button>
+                </div>
               </div>
 
               <button
