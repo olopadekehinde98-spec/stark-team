@@ -32,21 +32,24 @@ function greeting() {
 export default function DashboardPage() {
   const [data,    setData]    = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [myId,    setMyId]    = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      setMyId(user.id)
 
-      const [profileRes, actsRes, goalsRes, recentRes, lbRes] = await Promise.all([
+      const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
+
+      const [profileRes, actsRes, goalsRes, recentRes, weeklyTopRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),
         supabase.from('activities').select('status').eq('user_id', user.id),
         supabase.from('goals').select('title,status,target_value,current_value,goal_type,deadline').eq('user_id', user.id).eq('status','active').limit(2),
         supabase.from('activities').select('id,title,activity_type,status,submitted_at').eq('user_id', user.id)
           .order('submitted_at', { ascending: false }).limit(5),
-        supabase.from('leaderboard_snapshots').select('rank_position').eq('user_id', user.id)
-          .eq('period','monthly').order('snapshot_date', { ascending: false }).limit(1).maybeSingle(),
+        fetch('/api/leaderboard/live?period=weekly').then(r => r.json()).catch(() => ({ entries: [] })),
       ])
 
       const acts     = actsRes.data ?? []
@@ -54,12 +57,16 @@ export default function DashboardPage() {
       const pending  = acts.filter((a: any) => a.status === 'pending').length
       const rate     = acts.length > 0 ? Math.round((verified / acts.length) * 100) : 0
 
+      const top3  = (weeklyTopRes.entries ?? []).slice(0, 3)
+      const myPos = (weeklyTopRes.entries ?? []).findIndex((e: any) => e.id === user.id) + 1
+
       setData({
         profile: profileRes.data,
         total: acts.length, verified, pending, rate,
         goals:   goalsRes.data  ?? [],
         recent:  recentRes.data ?? [],
-        lb:      lbRes.data?.rank_position ?? null,
+        top3,
+        myPos: myPos || null,
       })
       setLoading(false)
     })()
@@ -107,7 +114,7 @@ export default function DashboardPage() {
         {[
           { icon:'📊', label:'Activities this month', value: data.total,    sub:`${data.verified} verified`,   badge:'+'+data.total, bc:S.ok   },
           { icon:'⚡', label:'Verified rate',          value:`${data.rate}%`, sub:'Target: 60%+',              badge:data.rate>=60?'Good':'Low',bc:data.rate>=60?S.ok:S.warn },
-          { icon:'🏆', label:'Leaderboard rank',       value: data.lb ? `#${data.lb}` : '—', sub:'Monthly ranking', badge:'Live', bc:S.blue },
+          { icon:'🏆', label:'Weekly rank',              value: data.myPos ? `#${data.myPos}` : '—', sub:'This week', badge:'Live', bc:S.blue },
           { icon:'⏳', label:'Pending verification',   value: data.pending,  sub:'Awaiting review',           badge:data.pending>0?'Action':'Clear', bc:data.pending>0?S.err:S.ok },
         ].map((s,i) => (
           <div key={i} style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, padding:18, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -184,25 +191,37 @@ export default function DashboardPage() {
         {/* Right column */}
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
-          {/* Rank card */}
+          {/* Top This Week */}
           <div style={{ background:S.navy, borderRadius:10, padding:20 }}>
-            <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.45)', letterSpacing:'0.06em', marginBottom:14 }}>YOUR RANK</div>
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-              <div style={{ width:46, height:46, background:S.gold, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:800, color:S.navy, flexShrink:0 }}>
-                {rankLabel.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0,2)}
-              </div>
-              <div>
-                <div style={{ fontSize:17, fontWeight:800, color:'#fff' }}>{rankLabel}</div>
-                <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:1 }}>{data.rate}% verified this month</div>
-              </div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.45)', letterSpacing:'0.06em' }}>🏆 TOP THIS WEEK</div>
+              {data.myPos && <div style={{ fontSize:11, fontWeight:700, color:S.gold }}>You #{data.myPos}</div>}
             </div>
-            <div style={{ height:6, background:'rgba(255,255,255,0.1)', borderRadius:3, overflow:'hidden', marginBottom:6 }}>
-              <div style={{ width:`${Math.min(100, data.rate)}%`, height:'100%', background:S.gold, borderRadius:3 }} />
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between' }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Verification rate</span>
-              <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:S.gold, fontWeight:600 }}>{data.rate}%</span>
-            </div>
+            {!(data.top3 ?? []).length ? (
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)', textAlign:'center', padding:'12px 0' }}>No activities logged yet this week</div>
+            ) : (data.top3 ?? []).map((e: any, i: number) => {
+              const medals = ['🥇','🥈','🥉']
+              const topScore = data.top3[0]?.score ?? 1
+              return (
+                <div key={e.id} style={{ display:'flex', alignItems:'center', gap:10, marginBottom: i < 2 ? 12 : 0 }}>
+                  <span style={{ fontSize:16, flexShrink:0 }}>{medals[i]}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color: e.id === myId ? S.gold : '#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      {e.full_name}{e.id === myId ? ' (you)' : ''}
+                    </div>
+                    <div style={{ height:3, background:'rgba(255,255,255,0.1)', borderRadius:2, marginTop:5 }}>
+                      <div style={{ width:`${topScore > 0 ? Math.round((e.score / topScore) * 100) : 0}%`, height:'100%', background: i === 0 ? S.gold : 'rgba(255,255,255,0.3)', borderRadius:2 }} />
+                    </div>
+                  </div>
+                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:13, fontWeight:800, color: i === 0 ? S.gold : 'rgba(255,255,255,0.6)', flexShrink:0 }}>
+                    {e.score}
+                  </div>
+                </div>
+              )
+            })}
+            <a href="/leaderboard" style={{ display:'block', marginTop:14, fontSize:12, color:'rgba(255,255,255,0.4)', textDecoration:'none', textAlign:'center', borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:12 }}>
+              View full leaderboard →
+            </a>
           </div>
 
           {/* Quick Actions */}

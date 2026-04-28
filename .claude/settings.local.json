@@ -29,7 +29,9 @@
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k\\) for k in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}.keys\\(\\)]\")",
       "Bash(cat .env.local)",
       "Bash(cat .env)",
-      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__apply_migration"
+      "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__apply_migration",
+      "Bash(npx next *)",
+      "Bash(git commit -m 'Fix TypeScript error: add missing bd2 color to help page S object *)"
     ]
   }
 }
