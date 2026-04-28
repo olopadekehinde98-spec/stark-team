@@ -28,8 +28,10 @@ export async function POST(request: Request) {
     assigned_email: assigned_email||null, expires_at,
   }).select('token').single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  // Build URL from the actual request origin so it works on any domain (prod/staging/localhost)
-  const origin = process.env.NEXT_PUBLIC_APP_URL
-    ?? new URL(request.url).origin
+  // Always use real request origin on production; only fall back to env var if it isn't localhost
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const origin = (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1'))
+    ? envUrl
+    : new URL(request.url).origin
   return NextResponse.json({ invite_url: origin + '/signup?token=' + data.token })
 }
