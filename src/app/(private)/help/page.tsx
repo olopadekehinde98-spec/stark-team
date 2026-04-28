@@ -10,6 +10,7 @@ const S = {
   ok:'#16A34A', okBg:'#F0FDF4', okBd:'#86EFAC',
   err:'#DC2626', errBg:'#FEF2F2', errBd:'#FCA5A5',
   blue:'#2563EB', blueBg:'#EFF6FF', blueBd:'#BFDBFE',
+  bd2:'#CBD5E1',
   warn:'#D97706', warnBg:'#FFFBEB', warnBd:'#FCD34D',
 }
 
