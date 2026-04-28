@@ -3,42 +3,29 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+const S = {
+  s1:'#FFFFFF',s2:'#F8FAFC',s3:'#EEF2F7',bd:'#E2E8F0',
+  navy:'#0F1C2E',gold:'#D4A017',
+  tx:'#0F172A',tx2:'#475569',mu:'#94A3B8',
+  ok:'#16A34A',okBg:'#F0FDF4',okBd:'#86EFAC',
+  warn:'#D97706',warnBg:'#FFFBEB',warnBd:'#FCD34D',
+  err:'#DC2626',errBg:'#FEF2F2',errBd:'#FCA5A5',
+  blue:'#2563EB',blueBg:'#EFF6FF',blueBd:'#BFDBFE',
+}
+
 type Activity = {
   id: string; title: string; activity_type: string; activity_date: string
-  status: string; submitted_at: string; edit_locked_at?: string; proof_url?: string
+  status: string; submitted_at: string; proof_url?: string
 }
 type FilterTab = 'all' | 'pending' | 'verified' | 'rejected'
 
-function StatusPill({ status }: { status: string }) {
-  const cls: Record<string, string> = {
-    verified: 'pill pill-verified', pending: 'pill pill-pending',
-    rejected: 'pill pill-rejected', unverified: 'pill pill-unverified',
+function statusStyle(s: string) {
+  return {
+    fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, display:'inline-block',
+    background: s==='verified' ? S.okBg : s==='pending' ? S.blueBg : S.errBg,
+    color:      s==='verified' ? S.ok   : s==='pending' ? S.blue   : S.err,
+    border:    `1px solid ${s==='verified' ? S.okBd : s==='pending' ? S.blueBd : S.errBd}`,
   }
-  return <span className={cls[status] ?? 'pill pill-unverified'}>{status}</span>
-}
-
-function EditCountdown({ submittedAt }: { submittedAt: string }) {
-  const [remain, setRemain] = useState('')
-
-  useEffect(() => {
-    const tick = () => {
-      const ms = 24 * 3600000 - (Date.now() - new Date(submittedAt).getTime())
-      if (ms <= 0) { setRemain(''); return }
-      const h = Math.floor(ms / 3600000)
-      const m = Math.floor((ms % 3600000) / 60000)
-      const s = Math.floor((ms % 60000) / 1000)
-      setRemain(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [submittedAt])
-
-  return remain ? (
-    <span className="font-mono" style={{ fontSize: 9, color: 'var(--warning)', letterSpacing: '0.05em' }}>
-      {remain}
-    </span>
-  ) : null
 }
 
 function hoursLeft(submittedAt: string) {
@@ -47,216 +34,160 @@ function hoursLeft(submittedAt: string) {
 
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [filter, setFilter]         = useState<FilterTab>('all')
+  const [loading,    setLoading]    = useState(true)
+  const [tab,        setTab]        = useState<FilterTab>('all')
+  const [search,     setSearch]     = useState('')
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data } = await supabase
         .from('activities')
-        .select('id,title,activity_type,activity_date,status,submitted_at,edit_locked_at,proof_url')
+        .select('id,title,activity_type,activity_date,status,submitted_at,proof_url')
         .eq('user_id', user.id)
         .order('submitted_at', { ascending: false })
-        .limit(60)
       setActivities(data ?? [])
       setLoading(false)
-    })
+    })()
   }, [])
 
-  const filtered  = filter === 'all' ? activities : activities.filter(a => a.status === filter)
-  const total     = activities.length
-  const verified  = activities.filter(a => a.status === 'verified').length
-  const pending   = activities.filter(a => a.status === 'pending').length
-  const rejected  = activities.filter(a => a.status === 'rejected').length
+  const filtered = activities.filter(a => {
+    const matchTab = tab === 'all' || a.status === tab
+    const matchQ   = !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.activity_type.toLowerCase().includes(search.toLowerCase())
+    return matchTab && matchQ
+  })
 
-  const editableActs = activities.filter(a => a.status === 'pending' && hoursLeft(a.submitted_at) > 0)
+  const counts = {
+    all:      activities.length,
+    pending:  activities.filter(a => a.status === 'pending').length,
+    verified: activities.filter(a => a.status === 'verified').length,
+    rejected: activities.filter(a => a.status === 'rejected').length,
+  }
 
-  const TABS: { key: FilterTab; label: string; count: number }[] = [
-    { key: 'all',      label: 'ALL',      count: total    },
-    { key: 'pending',  label: 'PENDING',  count: pending  },
-    { key: 'verified', label: 'VERIFIED', count: verified },
-    { key: 'rejected', label: 'REJECTED', count: rejected },
-  ]
+  const editableItems = activities.filter(a => a.status === 'pending' && hoursLeft(a.submitted_at) > 0)
+
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'50vh' }}>
+      <div style={{ width:32, height:32, borderRadius:'50%', border:`3px solid ${S.bd}`, borderTop:`3px solid ${S.navy}`, animation:'spin .8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
 
   return (
-    <div style={{ padding: 24, maxWidth: 1300, margin: '0 auto' }}>
+    <div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {/* ── HEADER ───────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+      {/* Header */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
         <div>
-          <h1 style={{
-            fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-            fontSize: 22, textTransform: 'uppercase', letterSpacing: '0.10em',
-            color: 'var(--text-primary)',
-          }}>FIELD REPORTS</h1>
-          <div className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.15em', marginTop: 2 }}>
-            SUBMITTED ACTIVITY LOG
-          </div>
+          <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Activities</h1>
+          <p style={{ fontSize:13, color:S.tx2 }}>{counts.all} total · {counts.verified} verified · {counts.pending} pending</p>
         </div>
         <Link href="/activities/submit" style={{
-          display: 'inline-block', padding: '10px 20px',
-          background: 'var(--gold)', color: '#03060A',
-          fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-          fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase',
-          textDecoration: 'none', border: 'none',
-        }}>+ SUBMIT ACTIVITY</Link>
+          padding:'9px 18px', borderRadius:8, background:S.navy,
+          color:'#fff', fontSize:13, fontWeight:600, textDecoration:'none',
+        }}>+ Submit Activity</Link>
       </div>
 
-      {/* ── EDIT WINDOW BANNER ───────────────────── */}
-      {editableActs.length > 0 && (
-        <div style={{
-          padding: '10px 16px', marginBottom: 16,
-          background: 'var(--gold-dim)',
-          border: '1px solid var(--gold-border)',
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          <div className="blink-dot" style={{
-            width: 6, height: 6, background: 'var(--gold)', borderRadius: '50%',
-            boxShadow: '0 0 6px var(--gold)', animation: 'pulse-green 2s ease-in-out infinite',
-          }} />
-          <div className="font-mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '0.12em' }}>
-            EDIT WINDOW ACTIVE |{' '}
-            <span style={{ color: 'var(--text-primary)' }}>{editableActs[0].title.toUpperCase()}</span>
-            {' '}|{' '}
-            <EditCountdown submittedAt={editableActs[0].submitted_at} /> REMAINING
+      {/* Edit window banner */}
+      {editableItems.length > 0 && (
+        <div style={{ background:S.warnBg, border:`1px solid ${S.warnBd}`, borderRadius:10, padding:'12px 16px', marginBottom:16, display:'flex', alignItems:'center', gap:10 }}>
+          <span>⏱</span>
+          <div style={{ fontSize:13, color:S.warn }}>
+            <strong>{editableItems.length} pending {editableItems.length===1?'activity':'activities'}</strong> can still be edited (within 24h of submission).
           </div>
         </div>
       )}
 
-      {/* ── STAT STRIP ───────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
-        {[
-          { label: 'TOTAL',    value: total,    color: 'var(--gold)'    },
-          { label: 'VERIFIED', value: verified, color: 'var(--success)' },
-          { label: 'PENDING',  value: pending,  color: 'var(--cyan)'    },
-          { label: 'REJECTED', value: rejected, color: 'var(--danger)'  },
-        ].map(s => (
-          <div key={s.label} className="panel" style={{ padding: '12px 14px' }}>
-            <div className="font-mono" style={{ fontSize: 8, letterSpacing: '0.18em', color: 'var(--text-muted)', marginBottom: 6 }}>
-              {s.label}
-            </div>
-            <div style={{
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 24, color: s.color, lineHeight: 1,
-            }}>{s.value}</div>
+      {/* Filter + search */}
+      <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, padding:18, marginBottom:16, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:4 }}>
+            {(['all','pending','verified','rejected'] as FilterTab[]).map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding:'6px 14px', borderRadius:20, border:'none', cursor:'pointer',
+                fontSize:12, fontWeight:600,
+                background: tab===t ? S.navy : S.s3,
+                color:      tab===t ? '#fff' : S.tx2,
+              }}>
+                {t.charAt(0).toUpperCase()+t.slice(1)} ({counts[t]})
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* ── FILTER TABS ──────────────────────────── */}
-      <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
-        {TABS.map(tab => (
-          <button key={tab.key}
-            onClick={() => setFilter(tab.key)}
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search activities…"
             style={{
-              padding: '6px 16px',
-              background: filter === tab.key ? 'var(--s2)' : 'transparent',
-              border: filter === tab.key ? '1px solid var(--b3)' : '1px solid var(--b1)',
-              color: filter === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
-              fontFamily: 'Share Tech Mono, monospace',
-              fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase',
-              cursor: 'pointer', transition: 'all 0.12s',
-            }}>
-            {tab.label}
-            <span style={{ marginLeft: 8, opacity: 0.6 }}>{tab.count}</span>
-          </button>
-        ))}
+              marginLeft:'auto', padding:'7px 12px', borderRadius:8,
+              border:`1px solid ${S.bd}`, background:S.s2,
+              fontSize:13, color:S.tx, width:220,
+              fontFamily:"'Inter',sans-serif",
+            }}
+          />
+        </div>
       </div>
 
-      {/* ── TABLE ────────────────────────────────── */}
-      {loading ? (
-        <div className="panel" style={{ padding: '48px 0', textAlign: 'center' }}>
-          <div className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.2em' }}>
-            RETRIEVING FIELD REPORTS...
-          </div>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="panel" style={{ padding: '48px 0', textAlign: 'center' }}>
-          <div style={{
-            fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-            fontSize: 16, color: 'var(--text-muted)', letterSpacing: '0.12em',
-            textTransform: 'uppercase', marginBottom: 8,
-          }}>
-            {filter === 'all' ? 'NO ACTIVITIES RECORDED' : `NO ${filter.toUpperCase()} ACTIVITIES`}
-          </div>
-          {filter === 'all' && (
-            <Link href="/activities/submit" style={{
-              display: 'inline-block', marginTop: 8, padding: '8px 20px',
-              background: 'var(--gold)', color: '#03060A',
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 12, letterSpacing: '0.15em', textDecoration: 'none',
-            }}>SUBMIT FIRST REPORT</Link>
-          )}
-        </div>
-      ) : (
-        <div className="panel" style={{ overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead className="tbl-header">
-              <tr>
-                {['ACTIVITY', 'TYPE', 'DATE', 'PROOF', 'STATUS', 'ACTION'].map(h => (
-                  <th key={h}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((a, i) => {
-                const hrs     = hoursLeft(a.submitted_at)
-                const editable = hrs > 0 && a.status === 'pending'
-                return (
-                  <tr key={a.id} className="tbl-row"
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--b1)' : 'none' }}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <Link href={`/activities/${a.id}`} style={{
-                        color: 'var(--text-primary)', fontFamily: 'Barlow Condensed, sans-serif',
-                        fontSize: 13, fontWeight: 500, textDecoration: 'none',
-                      }}>
-                        {a.title}
-                      </Link>
-                      {editable && (
-                        <span className="font-mono" style={{
-                          marginLeft: 8, fontSize: 8,
-                          padding: '1px 5px', background: 'var(--gold-dim)',
-                          border: '1px solid var(--gold-border)', color: 'var(--gold)',
-                          letterSpacing: '0.08em',
-                        }}>EDITABLE</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'Barlow Condensed, sans-serif', fontSize: 12, color: 'var(--text-secondary)' }}>
+      {/* Table */}
+      <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead>
+            <tr style={{ background:S.s2 }}>
+              {['Activity','Type','Date','Proof','Status',''].map(h => (
+                <th key={h} style={{
+                  padding:'10px 14px', textAlign:'left', fontSize:11, fontWeight:600,
+                  color:S.mu, borderBottom:`1px solid ${S.bd}`,
+                  letterSpacing:'0.04em', textTransform:'uppercase',
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr><td colSpan={6} style={{ padding:32, textAlign:'center', color:S.mu, fontSize:13 }}>
+                No activities found
+              </td></tr>
+            ) : filtered.map((a, i) => {
+              const canEdit = a.status === 'pending' && hoursLeft(a.submitted_at) > 0
+              return (
+                <tr key={a.id} style={{ borderBottom: i<filtered.length-1 ? `1px solid ${S.bd}` : 'none' }}>
+                  <td style={{ padding:'12px 14px' }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:S.tx }}>{a.title}</div>
+                    {canEdit && (
+                      <div style={{ fontSize:10, color:S.warn, marginTop:2 }}>
+                        Edit window: {Math.ceil(hoursLeft(a.submitted_at))}h left
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <span style={{ fontSize:11, fontWeight:500, color:S.tx2, background:S.s3, border:`1px solid ${S.bd}`, padding:'2px 8px', borderRadius:20 }}>
                       {a.activity_type}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)' }}>
-                        {new Date(a.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      {a.proof_url
-                        ? <a href={a.proof_url} target="_blank" rel="noopener noreferrer"
-                            className="font-mono" style={{ fontSize: 9, color: 'var(--success)', letterSpacing: '0.08em' }}>
-                            [VIEW]
-                          </a>
-                        : <span className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)' }}>—</span>}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <StatusPill status={a.status} />
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <Link href={`/activities/${a.id}`} style={{
-                        fontFamily: 'Share Tech Mono, monospace', fontSize: 9,
-                        color: 'var(--text-muted)', border: '1px solid var(--b2)',
-                        padding: '4px 10px', textDecoration: 'none',
-                        letterSpacing: '0.08em', display: 'inline-block',
-                      }}>VIEW</Link>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    </span>
+                  </td>
+                  <td style={{ padding:'12px 14px', fontFamily:"'JetBrains Mono',monospace", fontSize:12, color:S.tx2 }}>
+                    {a.activity_date ? new Date(a.activity_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}
+                  </td>
+                  <td style={{ padding:'12px 14px', fontSize:13, textAlign:'center' }}>
+                    {a.proof_url ? <span style={{ color:S.ok }}>✓</span> : <span style={{ color:S.mu }}>—</span>}
+                  </td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <span style={statusStyle(a.status)}>
+                      {a.status.charAt(0).toUpperCase()+a.status.slice(1)}
+                    </span>
+                  </td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <Link href={`/activities/${a.id}`} style={{ fontSize:12, color:S.blue, fontWeight:600, textDecoration:'none' }}>
+                      {canEdit ? 'Edit' : 'View'}
+                    </Link>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

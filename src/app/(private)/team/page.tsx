@@ -2,6 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
+const S = {
+  s1:'#FFFFFF',s2:'#F8FAFC',s3:'#EEF2F7',bd:'#E2E8F0',bd2:'#CBD5E1',
+  navy:'#0F1C2E',gold:'#D4A017',
+  tx:'#0F172A',tx2:'#475569',mu:'#94A3B8',
+  ok:'#16A34A',warn:'#D97706',err:'#DC2626',blue:'#2563EB',
+}
+
 type Member = {
   id: string; full_name: string; username: string
   role: string; rank: string; is_active: boolean
@@ -10,65 +17,59 @@ type Member = {
 }
 
 function initials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
-function activityStatus(lastSeen?: string): { color: string; label: string } {
-  if (!lastSeen) return { color: 'var(--danger)',  label: 'DARK' }
+function activityStatus(lastSeen?: string): { dot: string } {
+  if (!lastSeen) return { dot: S.err }
   const d = (Date.now() - new Date(lastSeen).getTime()) / 86400000
-  if (d < 7)  return { color: 'var(--success)', label: 'ACTIVE'   }
-  if (d < 14) return { color: 'var(--warning)', label: '7D+'      }
-  return             { color: 'var(--danger)',  label: '14D+'     }
+  if (d < 7)  return { dot: S.ok   }
+  if (d < 14) return { dot: S.warn }
+  return           { dot: S.err   }
 }
+
+const AVATAR_PALETTES = [
+  { bg:'#EFF6FF', tx:'#2563EB', bd:'#BFDBFE' },
+  { bg:'#F0FDF4', tx:'#16A34A', bd:'#86EFAC' },
+  { bg:'#FEF2F2', tx:'#DC2626', bd:'#FCA5A5' },
+  { bg:'#F5F3FF', tx:'#7C3AED', bd:'#DDD6FE' },
+  { bg:'#FEF9EC', tx:'#D4A017', bd:'#F5D87A' },
+]
 
 function NodeCard({ m, isMe = false }: { m: Member; isMe?: boolean }) {
   const status = activityStatus(m.last_seen_at)
+  const pal    = AVATAR_PALETTES[m.full_name.charCodeAt(0) % AVATAR_PALETTES.length]
   return (
-    <Link href={`/profile/${m.username}`} style={{ textDecoration: 'none' }}>
+    <Link href={`/profile/${m.username}`} style={{ textDecoration:'none' }}>
       <div style={{
-        width: 120, padding: '12px 10px', textAlign: 'center',
-        background: isMe ? 'var(--gold-dim)' : 'var(--s1)',
-        border: `1px solid ${isMe ? 'var(--gold-border)' : 'var(--b2)'}`,
-        position: 'relative',
-        transition: 'border-color 0.15s',
+        background: isMe ? S.navy : S.s1,
+        border: `1px solid ${isMe ? 'transparent' : S.bd}`,
+        borderRadius:8, padding:'10px 14px',
+        display:'flex', alignItems:'center', gap:9, minWidth:130,
+        boxShadow:'0 1px 2px rgba(0,0,0,0.04)',
       }}>
-        {/* corner bracket on current user node */}
-        {isMe && (
-          <>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 8, height: 8, borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }} />
-            <div style={{ position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderTop: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }} />
-          </>
-        )}
-        <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }}>
-          <div className="hexagon" style={{
-            width: 36, height: 36,
-            background: isMe ? 'var(--gold)' : 'var(--s2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{
-              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-              fontSize: 11, color: isMe ? '#03060A' : 'var(--gold)',
-            }}>{initials(m.full_name)}</span>
-          </div>
-          {/* Status square — not circle */}
-          <span style={{
-            position: 'absolute', bottom: 0, right: -2,
-            width: 7, height: 7,
-            background: status.color,
-            border: '1px solid var(--s1)',
+        <div style={{ position:'relative', flexShrink:0 }}>
+          <div style={{
+            width:28, height:28, borderRadius:'50%',
+            background: isMe ? S.gold : pal.bg,
+            border:`1px solid ${isMe ? 'transparent' : pal.bd}`,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:10, fontWeight:700, color: isMe ? S.navy : pal.tx,
+          }}>{initials(m.full_name)}</div>
+          <div style={{
+            position:'absolute', bottom:0, right:-2,
+            width:7, height:7, borderRadius:'50%', background:status.dot,
+            border:`1.5px solid ${isMe ? S.navy : S.s1}`,
           }} />
         </div>
-        <div style={{
-          fontFamily: 'Rajdhani, sans-serif', fontWeight: 600,
-          fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em',
-          color: isMe ? 'var(--gold)' : 'var(--text-primary)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          marginBottom: 2,
-        }}>{m.full_name.split(' ')[0]}</div>
-        <div className="font-mono" style={{
-          fontSize: 7, color: isMe ? 'var(--gold)' : 'var(--text-muted)',
-          letterSpacing: '0.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>{m.rank.replace(/_/g, ' ').toUpperCase()}</div>
+        <div>
+          <div style={{ fontSize:12, fontWeight:600, color: isMe ? '#fff' : S.tx, whiteSpace:'nowrap' }}>
+            {m.full_name.split(' ')[0]}
+          </div>
+          <div style={{ fontSize:10, color: isMe ? 'rgba(255,255,255,0.5)' : S.mu, textTransform:'capitalize' }}>
+            {m.rank.replace(/_/g, ' ')}
+          </div>
+        </div>
       </div>
     </Link>
   )
@@ -89,147 +90,92 @@ export default async function TeamPage() {
     .order('rank')
 
   const branchId      = myProfile?.branch_id
+  const branchName    = (members ?? []).find(m => m.branch_id === branchId && (m as any).branches)
   const branchMembers = (members ?? []).filter(m => m.id !== user.id && m.branch_id === branchId)
   const others        = (members ?? []).filter(m => m.id !== user.id && m.branch_id !== branchId)
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div>
+      <div style={{ marginBottom:22 }}>
+        <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Team Tree</h1>
+        <p style={{ fontSize:13, color:S.tx2 }}>
+          {branchName ? `${(branchName as any).branches?.name} Branch · ` : ''}Your downline structure
+        </p>
+      </div>
 
-      {/* ── HEADER ───────────────────────────────── */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{
-          fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-          fontSize: 22, textTransform: 'uppercase', letterSpacing: '0.10em',
-          color: 'var(--text-primary)',
-        }}>TEAM STRUCTURE</h1>
-        <div className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.15em', marginTop: 2 }}>
-          BRANCH CLEARANCE · {members?.length ?? 0} ACTIVE OPERATIVES
+      {/* Tree */}
+      <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, padding:'32px 24px', marginBottom:16, textAlign:'center', boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ display:'inline-flex', flexDirection:'column', alignItems:'center' }}>
+          {myProfile && <NodeCard m={myProfile as unknown as Member} isMe />}
+          {branchMembers.length > 0 && (
+            <>
+              <div style={{ width:1, height:24, background:S.bd2 }} />
+              <div style={{ width:Math.min(branchMembers.length,5)*158, height:1, background:S.bd2, maxWidth:'90vw' }} />
+              <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center' }}>
+                {branchMembers.map(m => (
+                  <div key={m.id} style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                    <div style={{ width:1, height:20, background:S.bd2 }} />
+                    <NodeCard m={m as unknown as Member} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {branchMembers.length === 0 && (
+            <div style={{ marginTop:16, fontSize:13, color:S.mu }}>No branch members assigned</div>
+          )}
+        </div>
+        <div style={{ display:'flex', justifyContent:'center', gap:20, marginTop:22 }}>
+          {[{color:S.ok,label:'Active'},{color:S.warn,label:'Inactive 7d'},{color:S.err,label:'Inactive 14d+'}].map(l => (
+            <span key={l.label} style={{ fontSize:12, color:S.tx2, display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ width:8, height:8, borderRadius:'50%', background:l.color, display:'inline-block' }} />
+              {l.label}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* ── TREE PANEL ───────────────────────────── */}
-      <div className="panel" style={{ padding: '32px 24px', marginBottom: 16 }}>
-
-        {/* Current user */}
-        {myProfile && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <NodeCard m={myProfile as unknown as Member} isMe />
-
-            {branchMembers.length > 0 && (
-              <>
-                <div style={{ width: 1, height: 24, background: 'var(--b2)', marginTop: 0 }} />
-                {/* Horizontal connector */}
-                <div style={{
-                  width: Math.min(branchMembers.length, 6) * 140,
-                  height: 1, background: 'var(--b2)',
-                  maxWidth: '90%',
-                }} />
-                {/* Branch nodes */}
-                <div style={{ display: 'flex', gap: 16, marginTop: 0, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {branchMembers.map(m => (
-                    <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={{ width: 1, height: 20, background: 'var(--b2)' }} />
-                      <NodeCard m={m as unknown as Member} />
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {branchMembers.length === 0 && (
-          <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <div className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.15em' }}>
-              NO BRANCH MEMBERS ASSIGNED
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── STATUS LEGEND ────────────────────────── */}
-      <div style={{ display: 'flex', gap: 20, marginBottom: 20, flexWrap: 'wrap' }}>
-        {[
-          { color: 'var(--success)', label: 'ACTIVE (< 7 DAYS)'    },
-          { color: 'var(--warning)', label: 'INACTIVE 7–14 DAYS'   },
-          { color: 'var(--danger)',  label: 'DARK 14+ DAYS'         },
-        ].map(l => (
-          <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, background: l.color, flexShrink: 0 }} />
-            <span className="font-mono" style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.12em' }}>
-              {l.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── OTHER BRANCHES TABLE ──────────────────── */}
       {others.length > 0 && (
         <>
-          <div className="font-mono" style={{
-            fontSize: 8, letterSpacing: '0.25em', color: 'var(--text-muted)',
-            marginBottom: 10,
-          }}>OTHER BRANCHES</div>
-          <div className="panel" style={{ overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ fontSize:11, fontWeight:600, color:S.mu, letterSpacing:'0.06em', marginBottom:10, textTransform:'uppercase' }}>Other Branches</div>
+          <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, overflow:'hidden', boxShadow:'0 1px 2px rgba(0,0,0,0.04)' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
               <thead>
-                <tr style={{ background: 'var(--s2)', borderBottom: '1px solid var(--b1)' }}>
-                  {['OPERATIVE', 'RANK', 'ROLE', 'BRANCH', 'STATUS'].map(h => (
-                    <th key={h} style={{
-                      padding: '10px 16px', textAlign: 'left',
-                      fontFamily: 'Share Tech Mono, monospace',
-                      fontSize: 9, letterSpacing: '0.15em', color: 'var(--text-muted)', fontWeight: 400,
-                    }}>{h}</th>
+                <tr style={{ background:S.s2 }}>
+                  {['Member','Rank','Role','Branch','Status'].map(h => (
+                    <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:11, fontWeight:600, color:S.mu, borderBottom:`1px solid ${S.bd}`, letterSpacing:'0.04em', textTransform:'uppercase' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {others.map((m, i) => {
                   const status = activityStatus((m as unknown as Member).last_seen_at)
+                  const pal    = AVATAR_PALETTES[m.full_name.charCodeAt(0) % AVATAR_PALETTES.length]
                   return (
-                    <tr key={m.id} style={{ borderBottom: i < others.length - 1 ? '1px solid var(--b1)' : 'none' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--gold-dim)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div className="hexagon" style={{
-                            width: 28, height: 28, background: 'var(--s2)', flexShrink: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 9, color: 'var(--gold)' }}>
-                              {initials(m.full_name)}
-                            </span>
+                    <tr key={m.id} style={{ borderBottom:i<others.length-1?`1px solid ${S.bd}`:'none' }}>
+                      <td style={{ padding:'11px 14px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                          <div style={{ width:28, height:28, borderRadius:'50%', background:pal.bg, border:`1px solid ${pal.bd}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:pal.tx, flexShrink:0 }}>
+                            {initials(m.full_name)}
                           </div>
                           <div>
-                            <Link href={`/profile/${m.username}`} style={{
-                              fontFamily: 'Rajdhani, sans-serif', fontWeight: 600,
-                              fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.06em',
-                              color: 'var(--text-primary)', textDecoration: 'none',
-                            }}>{m.full_name}</Link>
-                            <div className="font-mono" style={{ fontSize: 8, color: 'var(--text-muted)' }}>@{m.username}</div>
+                            <Link href={`/profile/${m.username}`} style={{ fontSize:13, fontWeight:600, color:S.tx, textDecoration:'none' }}>{m.full_name}</Link>
+                            <div style={{ fontSize:10, color:S.mu }}>@{m.username}</div>
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span className="pill pill-active" style={{ fontSize: 7 }}>
-                          {m.rank.replace(/_/g, ' ').toUpperCase()}
+                      <td style={{ padding:'11px 14px' }}>
+                        <span style={{ fontSize:11, color:S.tx2, background:S.s3, border:`1px solid ${S.bd}`, padding:'2px 8px', borderRadius:20, fontWeight:500 }}>
+                          {m.rank.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span className="font-mono" style={{ fontSize: 9, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                          {m.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span className="font-mono" style={{ fontSize: 9, color: 'var(--text-muted)' }}>
-                          {((m as any).branches as any)?.name ?? '—'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 6, height: 6, background: status.color, flexShrink: 0 }} />
-                          <span className="font-mono" style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>
-                            {status.label}
+                      <td style={{ padding:'11px 14px', fontSize:12, color:S.tx2, textTransform:'capitalize' }}>{m.role}</td>
+                      <td style={{ padding:'11px 14px', fontSize:12, color:S.mu }}>{((m as any).branches as any)?.name ?? '—'}</td>
+                      <td style={{ padding:'11px 14px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <div style={{ width:7, height:7, borderRadius:'50%', background:status.dot }} />
+                          <span style={{ fontSize:11, color:S.mu }}>
+                            {status.dot===S.ok?'Active':status.dot===S.warn?'Inactive 7d':'Inactive 14d+'}
                           </span>
                         </div>
                       </td>
