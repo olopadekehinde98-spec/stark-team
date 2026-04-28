@@ -31,7 +31,8 @@
       "Bash(cat .env)",
       "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__apply_migration",
       "Bash(npx next *)",
-      "Bash(git commit -m 'Fix TypeScript error: add missing bd2 color to help page S object *)"
+      "Bash(git commit -m 'Fix TypeScript error: add missing bd2 color to help page S object *)",
+      "Bash(git -C C:/Users/SAMUEL/stark-team diff --stat HEAD~1 HEAD)"
     ]
   }
 }

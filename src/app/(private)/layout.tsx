@@ -8,9 +8,11 @@ const NAV_LINKS = [
   { label: 'Dashboard',    href: '/dashboard'        },
   { label: 'Activities',   href: '/activities'       },
   { label: 'Goals',        href: '/goals'            },
+  { label: 'AOL',          href: '/aol'              },
   { label: 'Leaderboard',  href: '/leaderboard'      },
   { label: 'Team',         href: '/team'             },
-  { label: 'AI Coach',     href: '/ai-coach'         },
+  { label: 'Chat',         href: '/chat'             },
+  { label: 'Inbox',        href: '/inbox'            },
   { label: 'Recognition',  href: '/recognition'      },
   { label: 'Notifications',href: '/notifications'    },
   { label: '❓ Help',      href: '/help'             },
@@ -108,6 +110,18 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
               }}>{link.label}</Link>
             )
           })}
+          {/* Verify Queue — leaders + admins */}
+          {(profile?.role === 'leader' || profile?.role === 'admin') && (() => {
+            const isActive = pathname === '/verify'
+            return (
+              <Link href="/verify" style={{
+                padding: '7px 14px', fontSize: 13, fontWeight: isActive ? 600 : 500, borderRadius: 6,
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}>✓ Verify</Link>
+            )
+          })()}
           {/* Admin-only link */}
           {profile?.role === 'admin' && (() => {
             const isActive = pathname.startsWith('/admin')

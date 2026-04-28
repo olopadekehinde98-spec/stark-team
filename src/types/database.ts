@@ -1,5 +1,5 @@
 export type Role = 'admin' | 'leader' | 'member'
-export type Rank = 'distributor' | 'manager' | 'senior_manager' | 'executive_manager' | 'director'
+export type Rank = 'member' | 'distributor' | 'manager' | 'senior_manager' | 'executive_manager' | 'director'
 export type ActivityStatus = 'pending' | 'verified' | 'unverified' | 'rejected'
 export type GoalStatus = 'active' | 'completed' | 'failed' | 'archived'
 export type GoalType = 'daily' | 'weekly' | 'monthly'
