@@ -46,18 +46,26 @@ export default function ProfilePage() {
     if (!user) return
     const [profRes, actsRes, goalsRes, lbRes] = await Promise.all([
       supabase.from('users').select('*').eq('id', user.id).single(),
-      supabase.from('activities').select('status,title,activity_type,submitted_at').eq('user_id', user.id).order('submitted_at',{ascending:false}).limit(5),
+      supabase.from('activities').select('status,title,activity_type,submitted_at').eq('user_id', user.id).order('submitted_at',{ascending:false}).limit(200),
       supabase.from('goals').select('status').eq('user_id', user.id),
       supabase.from('leaderboard_snapshots').select('rank_position').eq('user_id', user.id).eq('period','monthly').order('snapshot_date',{ascending:false}).limit(1).maybeSingle(),
     ])
     const prof  = profRes.data
-    const acts  = actsRes.data ?? []
-    const verified  = acts.filter((a: any) => a.status === 'verified').length
+    const allActs = actsRes.data ?? []
+    const verified  = allActs.filter((a: any) => a.status === 'verified').length
     const goalsDone = (goalsRes.data ?? []).filter((g: any) => g.status === 'completed').length
-    const rate  = acts.length > 0 ? Math.round((verified / acts.length) * 100) : 0
+    const rate  = allActs.length > 0 ? Math.round((verified / allActs.length) * 100) : 0
+    // Streak: unique days with at least one submission in last 30 days, check for 7 consecutive
+    const daySet = new Set(allActs.map((a: any) => new Date(a.submitted_at).toDateString()))
+    let streak = 0
+    for (let d = 0; d < 30; d++) {
+      const day = new Date(Date.now() - d * 86400000).toDateString()
+      if (daySet.has(day)) streak++
+      else if (streak > 0) break
+    }
     setProfile(prof)
-    setStats({ total: acts.length, verified, rate, goalsDone, lb: lbRes.data?.rank_position ?? null })
-    setActivities(acts)
+    setStats({ total: allActs.length, verified, rate, goalsDone, lb: lbRes.data?.rank_position ?? null, streak })
+    setActivities(allActs.slice(0, 5))
     setForm({ full_name: prof?.full_name ?? '', username: prof?.username ?? '', bio: prof?.bio ?? '' })
     setLoading(false)
   }, [])
@@ -142,8 +150,9 @@ export default function ProfilePage() {
   const badgesEarned = BADGE_DEFS.filter(b => {
     if (b.id === 'first_activity') return (stats?.total ?? 0) >= 1
     if (b.id === 'verified_10')    return (stats?.verified ?? 0) >= 10
-    if (b.id === 'top_10')         return stats?.lb && stats.lb <= 10
+    if (b.id === 'top_10')         return stats?.lb != null && stats.lb <= 10
     if (b.id === 'goal_setter')    return (stats?.goalsDone ?? 0) >= 1
+    if (b.id === 'streak_7')       return (stats?.streak ?? 0) >= 7
     return false
   })
 
