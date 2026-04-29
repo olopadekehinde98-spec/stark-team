@@ -51,30 +51,25 @@ function SignupForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, username, invite_token: token } },
-    })
-    if (signUpError) { setError(signUpError.message); setLoading(false); return }
 
-    // If Supabase returned a session the user is confirmed → go straight to dashboard
-    // If no session, email confirmation is required → show instructions
-    if (data.session) {
+    // Create account via API — this validates the invite, inserts the user profile, and marks the invite used
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, full_name: fullName, username, token }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setError(json.error ?? 'Signup failed'); setLoading(false); return }
+
+    // Sign in so the browser gets a session
+    const supabase = createClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (!signInError) {
       router.push('/dashboard')
     } else {
-      // Auto sign-in after registration (works when email confirm is OFF)
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (!signInError) {
-        router.push('/dashboard')
-      } else {
-        // Email confirmation is ON — tell the user to check their inbox
-        setError(
-          '✅ Account created! Check your email inbox and click the confirmation link, then come back to log in.'
-        )
-        setLoading(false)
-      }
+      // Email confirmation is ON — user must confirm before logging in
+      setError('✅ Account created! Check your email and click the confirmation link, then log in.')
+      setLoading(false)
     }
   }
 
