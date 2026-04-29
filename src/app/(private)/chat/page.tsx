@@ -44,8 +44,6 @@ function fmtTime(iso: string) {
 }
 
 export default function ChatPage() {
-  const supabase = createClient()
-
   const [profile,    setProfile]    = useState<any>(null)
   const [channel,    setChannel]    = useState('general')
   const [messages,   setMessages]   = useState<any[]>([])
@@ -59,6 +57,7 @@ export default function ChatPage() {
 
   // Load current user profile
   useEffect(() => {
+    const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       supabase.from('users').select('id, full_name, rank, role').eq('id', user.id).single()
@@ -86,6 +85,7 @@ export default function ChatPage() {
 
   // Realtime subscription
   useEffect(() => {
+    const supabase = createClient()
     const sub = supabase
       .channel(`chat:${channel}`)
       .on(
