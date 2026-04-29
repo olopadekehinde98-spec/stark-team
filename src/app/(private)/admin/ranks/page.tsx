@@ -6,8 +6,12 @@ const S = {
 
 const RANKS = [
   {
+    value: 'e_member', label: 'E-Member', points: 0,
+    desc: 'Entry-level. New member who joined via invite link.',
+  },
+  {
     value: 'distributor', label: 'Distributor', points: 0,
-    desc: 'Entry-level. Recruited member who has joined the team.',
+    desc: 'Active distributor who has joined the team.',
   },
   {
     value: 'manager', label: 'Manager', points: 500,

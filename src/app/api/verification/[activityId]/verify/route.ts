@@ -25,7 +25,7 @@ export async function POST(
 
   const { data: activity } = await adminSupabase
     .from('activities')
-    .select('id, status, user_id, users!inner(rank, branch_id)')
+    .select('id, status, user_id, users!inner(rank, branch_id, invited_by)')
     .eq('id', params.activityId)
     .single()
 
@@ -36,12 +36,23 @@ export async function POST(
 
   const target = activity.users as any
 
+  // Resolve invited_by rank for senior manager protection
+  let invitedByRank: string | null = null
+  if (target.invited_by) {
+    const { data: inviter } = await adminSupabase
+      .from('users').select('rank').eq('id', target.invited_by).single()
+    invitedByRank = inviter?.rank ?? null
+  }
+
   const check = canVerify({
-    verifierRole:     verifier.role,
-    verifierRank:     verifier.rank,
-    verifierBranchId: verifier.branch_id,
-    targetRank:       target.rank,
-    targetBranchId:   target.branch_id,
+    verifierRole:         verifier.role,
+    verifierRank:         verifier.rank,
+    verifierId:           user.id,
+    verifierBranchId:     verifier.branch_id,
+    targetRank:           target.rank,
+    targetBranchId:       target.branch_id,
+    targetInvitedById:    target.invited_by ?? null,
+    targetInvitedByRank:  invitedByRank,
   })
 
   if (!check.allowed) {

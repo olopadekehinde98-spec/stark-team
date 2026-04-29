@@ -11,6 +11,7 @@ const S = {
 }
 
 const RANKS = [
+  { value:'e_member',          label:'E-Member'       },
   { value:'distributor',       label:'Distributor'    },
   { value:'manager',           label:'Manager'        },
   { value:'senior_manager',    label:'Senior Manager' },
@@ -39,7 +40,7 @@ export default function AdminInvitesPage() {
   const [showQr,    setShowQr]    = useState<string | null>(null)
   const [deleting,  setDeleting]  = useState<string | null>(null)
   const [confirmDel,setConfirmDel]= useState<string | null>(null)
-  const [form,      setForm]      = useState({ role:'member', rank:'distributor', email:'', expires_days:'365' })
+  const [form,      setForm]      = useState({ role:'member', rank:'e_member', email:'', expires_days:'365' })
   const [toast,     setToast]     = useState('')
 
   const loadInvites = useCallback(async () => {

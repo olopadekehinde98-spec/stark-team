@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     .insert({
       created_by:    user.id,
       assigned_role: 'member',
-      assigned_rank: 'member',
+      assigned_rank: 'e_member',
       is_active:     true,
       expires_at,
     })
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     .insert({
       created_by:    user.id,
       assigned_role: 'member',
-      assigned_rank: 'member',
+      assigned_rank: 'e_member',
       is_active:     true,
       expires_at,
     })
