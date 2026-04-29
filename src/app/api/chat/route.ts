@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   if (!content || content.length > 2000)
     return NextResponse.json({ error: 'Content must be 1–2000 characters' }, { status: 400 })
 
-  const allowed = ['general', 'branch', 'leadership']
+  const allowed = ['general', 'branch', 'inbox', 'leadership']
   if (!allowed.includes(channel))
     return NextResponse.json({ error: 'Invalid channel' }, { status: 400 })
 

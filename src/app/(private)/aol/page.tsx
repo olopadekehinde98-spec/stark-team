@@ -25,6 +25,27 @@ export default function AOLPage() {
   const [activities,  setActivities]  = useState<any[]>([])
   const [teamStats,   setTeamStats]   = useState<any[]>([])
   const [loading,     setLoading]     = useState(true)
+  const [toggling,    setToggling]    = useState<string | null>(null)
+  const [toast,       setToast]       = useState('')
+
+  function flash(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  async function toggleStatus(userId: string, currentActive: boolean) {
+    setToggling(userId)
+    const r = await fetch(`/api/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !currentActive }),
+    })
+    if (r.ok) {
+      setTeamStats(prev => prev.map(m => m.id === userId ? { ...m, is_active: !currentActive } : m))
+      flash(currentActive ? 'Member deactivated' : 'Member activated')
+    } else {
+      const e = await r.json()
+      flash('Error: ' + (e.error ?? 'Failed'))
+    }
+    setToggling(null)
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -40,9 +61,9 @@ export default function AOLPage() {
           .order('submitted_at', { ascending: false })
           .limit(20),
         supabase.from('users')
-          .select('id,full_name,rank,role')
+          .select('id,full_name,rank,role,is_active')
           .neq('id', user.id)
-          .limit(10),
+          .limit(20),
       ])
 
       setProfile(profRes.data)
@@ -65,9 +86,18 @@ export default function AOLPage() {
     </div>
   )
 
+  const isAdmin = profile?.role === 'admin'
+
   return (
     <div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:'fixed', top:20, right:20, zIndex:999, background:'#0F1C2E', color:'#fff', padding:'10px 18px', borderRadius:8, fontSize:13, fontWeight:600, boxShadow:'0 4px 12px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ marginBottom:24 }}>
@@ -127,23 +157,42 @@ export default function AOLPage() {
         <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ padding:'16px 20px', borderBottom:`1px solid ${S.bd}` }}>
             <div style={{ fontSize:14, fontWeight:700, color:S.tx }}>Team Members</div>
+            {isAdmin && <div style={{ fontSize:11, color:S.mu, marginTop:2 }}>Click status to toggle active/inactive</div>}
           </div>
           {teamStats.length === 0 ? (
             <div style={{ padding:30, textAlign:'center', color:S.mu, fontSize:13 }}>No team members yet</div>
-          ) : teamStats.map((m, i, arr) => (
-            <div key={m.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 20px', borderBottom: i < arr.length-1 ? `1px solid ${S.bd}` : 'none' }}>
-              <div style={{ width:32, height:32, borderRadius:'50%', background:S.goldBg, border:`1px solid ${S.goldBd}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:S.navy, flexShrink:0 }}>
-                {getInitials(m.full_name)}
+          ) : teamStats.map((m, i, arr) => {
+            const active = m.is_active !== false
+            return (
+              <div key={m.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 20px', borderBottom: i < arr.length-1 ? `1px solid ${S.bd}` : 'none' }}>
+                <div style={{ width:32, height:32, borderRadius:'50%', background:S.goldBg, border:`1px solid ${S.goldBd}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:S.navy, flexShrink:0 }}>
+                  {getInitials(m.full_name)}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:S.tx, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.full_name}</div>
+                  <div style={{ fontSize:11, color:S.mu }}>{RANK_MAP[m.rank] ?? m.rank} · <span style={{ textTransform:'capitalize' }}>{m.role}</span></div>
+                </div>
+                {isAdmin ? (
+                  <button
+                    onClick={() => toggleStatus(m.id, active)}
+                    disabled={toggling === m.id}
+                    style={{
+                      fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, border:'none', cursor:'pointer',
+                      background: active ? S.okBg : S.errBg,
+                      color:      active ? S.ok   : S.err,
+                      opacity: toggling === m.id ? 0.6 : 1,
+                    }}
+                  >
+                    {toggling === m.id ? '…' : active ? '● Active' : '○ Inactive'}
+                  </button>
+                ) : (
+                  <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, background: active ? S.okBg : S.errBg, color: active ? S.ok : S.err }}>
+                    {active ? '● Active' : '○ Inactive'}
+                  </span>
+                )}
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:13, fontWeight:600, color:S.tx, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.full_name}</div>
-                <div style={{ fontSize:11, color:S.mu }}>{RANK_MAP[m.rank] ?? m.rank}</div>
-              </div>
-              <span style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:20, background:S.s3, color:S.tx2, textTransform:'capitalize' }}>
-                {m.role}
-              </span>
-            </div>
-          ))}
+            )
+          })}
           <div style={{ padding:'12px 20px', borderTop:`1px solid ${S.bd}` }}>
             <a href="/team" style={{ fontSize:12, color:S.blue, textDecoration:'none', fontWeight:600 }}>View full team →</a>
           </div>
