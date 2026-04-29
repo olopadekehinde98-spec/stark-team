@@ -15,7 +15,7 @@ export async function GET() {
   // Fetch custom user profile rows
   const { data: rows, error } = await admin
     .from('users')
-    .select('id,full_name,username,role,rank,is_active,created_at,sponsor_id')
+    .select('id,full_name,username,role,rank,is_active,created_at,invited_by')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

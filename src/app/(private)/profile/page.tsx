@@ -110,8 +110,18 @@ export default function ProfilePage() {
     }
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
     const avatar_url = urlData.publicUrl + '?t=' + Date.now()
-    const { error: updateErr } = await supabase.from('users').update({ avatar_url }).eq('id', user.id)
-    if (updateErr) { setMsg('Photo uploaded but profile update failed: ' + updateErr.message); setUploading(false); return }
+    // Use server route to avoid DB trigger constraint issues
+    const updateRes = await fetch('/api/profile/avatar', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar_url }),
+    })
+    if (!updateRes.ok) {
+      const e = await updateRes.json().catch(() => ({}))
+      setMsg('Photo uploaded but profile update failed: ' + (e.error ?? 'unknown error'))
+      setUploading(false)
+      return
+    }
     setProfile((p: any) => ({ ...p, avatar_url }))
     setMsg('Photo updated!')
     setUploading(false)

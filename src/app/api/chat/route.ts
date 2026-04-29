@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const { data: users } = await supabase.from('users').select('id, full_name, rank').in('id', userIds)
     userMap = Object.fromEntries((users ?? []).map((u: any) => [u.id, { full_name: u.full_name, rank: u.rank }]))
   }
-  const messages = msgs.reverse().map((m: any) => ({ ...m, user: userMap[m.user_id] ?? null }))
+  const messages = msgs.reverse().map((m: any) => ({ ...m, users: userMap[m.user_id] ?? null }))
 
   return NextResponse.json({ messages })
 }
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   // Attach user info
   const { data: userInfo } = await supabase.from('users').select('full_name, rank').eq('id', user.id).single()
-  return NextResponse.json({ message: { ...msg, user: userInfo ?? null } }, { status: 201 })
+  return NextResponse.json({ message: { ...msg, users: userInfo ?? null } }, { status: 201 })
 }
 
 // DELETE /api/chat?id=<uuid>  (soft-delete — own msg or admin/leader)

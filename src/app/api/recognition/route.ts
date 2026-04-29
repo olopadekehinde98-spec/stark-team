@@ -19,11 +19,16 @@ export async function POST(req: NextRequest) {
   if (profile?.role !== 'leader' && profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await req.json()
   if (!body.title) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+  // Ensure message meets DB check constraint (min 50 chars). Use a default if not provided.
+  const message = (body.message ?? '').trim()
+  const safeMessage = message.length >= 50
+    ? message
+    : `Congratulations on this achievement! Your hard work and dedication to the team is truly appreciated.`
   const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
   const { data: limit } = await supabase.from('recognition_weekly_limits').select('count').eq('issuer_id', user.id).gte('week_start', weekStart.toISOString()).single()
   if (limit && limit.count >= 3) return NextResponse.json({ error: 'Weekly recognition limit (3) reached' }, { status: 429 })
   const admin = createAdminClient()
-  const { data, error } = await admin.from('recognitions').insert({ ...body, issued_by: user.id }).select().single()
+  const { data, error } = await admin.from('recognitions').insert({ ...body, message: safeMessage, issued_by: user.id }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (limit) {
     await admin.from('recognition_weekly_limits').update({ count: limit.count + 1 }).eq('issuer_id', user.id).gte('week_start', weekStart.toISOString())

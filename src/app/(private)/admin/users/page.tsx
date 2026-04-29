@@ -254,10 +254,10 @@ export default function AdminUsersPage() {
                   {/* Sponsor */}
                   <td style={tdStyle}>
                     <select
-                      value={u.sponsor_id ?? ''}
-                      disabled={!!busy('sponsor_id')}
-                      onChange={e => patch(u.id, 'sponsor_id', 'sponsor', { sponsor_id: e.target.value || null })}
-                      style={{ ...sel, opacity: busy('sponsor_id') ? 0.5 : 1 }}
+                      value={u.invited_by ?? ''}
+                      disabled={!!busy('invited_by')}
+                      onChange={e => patch(u.id, 'invited_by', 'sponsor', { invited_by: e.target.value || null })}
+                      style={{ ...sel, opacity: busy('invited_by') ? 0.5 : 1 }}
                     >
                       <option value="">— None —</option>
                       {users.filter(p => p.id !== u.id).map(p => (
