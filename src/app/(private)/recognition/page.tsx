@@ -49,14 +49,23 @@ export default async function RecognitionPage() {
       .limit(20),
     supabase
       .from('recognitions')
-      .select('id,title,message,badge_type,created_at,is_auto,users!recognitions_recipient_id_fkey(full_name,username)')
+      .select('id,title,message,badge_type,created_at,is_auto,recipient_id')
       .eq('is_revoked', false)
       .order('created_at', { ascending: false })
       .limit(50),
   ])
 
   const myBadges = myBadgesRes.data ?? []
-  const wall     = wallRes.data ?? []
+  const rawWall  = wallRes.data ?? []
+
+  // Fetch recipient user info separately to avoid FK join issues
+  const recipientIds = [...new Set(rawWall.map((r: any) => r.recipient_id))]
+  let recipientMap: Record<string, any> = {}
+  if (recipientIds.length > 0) {
+    const { data: rUsers } = await supabase.from('users').select('id,full_name,username').in('id', recipientIds)
+    recipientMap = Object.fromEntries((rUsers ?? []).map((u: any) => [u.id, u]))
+  }
+  const wall = rawWall.map((r: any) => ({ ...r, users: recipientMap[r.recipient_id] ?? null }))
   const canIssue = myProfile?.role === 'leader' || myProfile?.role === 'admin'
 
   return (

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   let q = supabase
     .from('team_messages')
-    .select('id, content, channel, created_at, user_id, users(full_name, rank)')
+    .select('id, content, channel, created_at, user_id')
     .eq('channel', channel)
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
@@ -26,7 +26,17 @@ export async function GET(req: NextRequest) {
   const { data, error } = await q
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ messages: (data ?? []).reverse() })
+  // Fetch user info separately to avoid FK join issues
+  const msgs = data ?? []
+  const userIds = [...new Set(msgs.map((m: any) => m.user_id))]
+  let userMap: Record<string, any> = {}
+  if (userIds.length > 0) {
+    const { data: users } = await supabase.from('users').select('id, full_name, rank').in('id', userIds)
+    userMap = Object.fromEntries((users ?? []).map((u: any) => [u.id, { full_name: u.full_name, rank: u.rank }]))
+  }
+  const messages = msgs.reverse().map((m: any) => ({ ...m, user: userMap[m.user_id] ?? null }))
+
+  return NextResponse.json({ messages })
 }
 
 // POST /api/chat  { channel, content }
@@ -56,11 +66,14 @@ export async function POST(req: NextRequest) {
   const { data: msg, error } = await supabase
     .from('team_messages')
     .insert({ user_id: user.id, channel, content })
-    .select('id, content, channel, created_at, user_id, users(full_name, rank)')
+    .select('id, content, channel, created_at, user_id')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ message: msg }, { status: 201 })
+
+  // Attach user info
+  const { data: userInfo } = await supabase.from('users').select('full_name, rank').eq('id', user.id).single()
+  return NextResponse.json({ message: { ...msg, user: userInfo ?? null } }, { status: 201 })
 }
 
 // DELETE /api/chat?id=<uuid>  (soft-delete — own msg or admin/leader)

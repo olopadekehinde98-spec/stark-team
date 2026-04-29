@@ -60,9 +60,10 @@ export default function SettingsPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { error } = await supabase.from('users').update({ full_name: fullName, bio }).eq('id', user.id)
+    // Only bio is editable; name/username/email are admin-controlled
+    const { error } = await supabase.from('users').update({ bio }).eq('id', user.id)
     setSaving(false)
-    setMsg(error ? { text:'Failed: ' + error.message, ok:false } : { text:'Changes saved ✓', ok:true })
+    setMsg(error ? { text:'Failed: ' + error.message, ok:false } : { text:'Bio saved ✓', ok:true })
   }
 
   async function saveNotifs() {
@@ -150,16 +151,18 @@ export default function SettingsPage() {
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               <div>
                 <label style={{ display:'block', fontSize:11, fontWeight:600, color:S.mu, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>Full Name</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} required style={input} />
+                <div style={{ ...input, background:S.s3, opacity:0.8, cursor:'default' }}>{fullName || '—'}</div>
+                <div style={{ fontSize:11, color:S.mu, marginTop:4 }}>Name can only be changed by an admin.</div>
               </div>
               <div>
                 <label style={{ display:'block', fontSize:11, fontWeight:600, color:S.mu, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>Username</label>
-                <input value={profile.username ?? ''} disabled style={{ ...input, opacity:0.6 }} />
+                <div style={{ ...input, background:S.s3, opacity:0.8, cursor:'default' }}>@{profile.username ?? ''}</div>
                 <div style={{ fontSize:11, color:S.mu, marginTop:4 }}>Username cannot be changed.</div>
               </div>
               <div>
                 <label style={{ display:'block', fontSize:11, fontWeight:600, color:S.mu, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>Email</label>
-                <input value={profile.email ?? ''} disabled style={{ ...input, opacity:0.6 }} />
+                <div style={{ ...input, background:S.s3, opacity:0.8, cursor:'default' }}>{profile.email ?? '—'}</div>
+                <div style={{ fontSize:11, color:S.mu, marginTop:4 }}>Contact an admin to change your email.</div>
               </div>
               <div>
                 <label style={{ display:'block', fontSize:11, fontWeight:600, color:S.mu, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>Bio</label>

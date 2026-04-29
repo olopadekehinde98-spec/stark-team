@@ -95,6 +95,8 @@ export default function ProfilePage() {
     if (!file) return
     if (file.size > 5 * 1024 * 1024) { setMsg('Image must be under 5MB'); return }
     setUploading(true); setMsg('')
+    // Ensure the avatars bucket exists before uploading
+    await fetch('/api/storage/ensure-buckets', { method: 'POST' }).catch(() => {})
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploading(false); return }
@@ -102,7 +104,7 @@ export default function ProfilePage() {
     const path = `${user.id}/avatar.${ext}`
     const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
     if (upErr) {
-      setMsg('Upload failed: ' + upErr.message + '. Check that the avatars storage bucket exists and is public.')
+      setMsg('Upload failed: ' + upErr.message)
       setUploading(false)
       return
     }

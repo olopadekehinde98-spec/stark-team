@@ -41,11 +41,7 @@ export default function AICoachPage() {
 
       try {
         const res = await fetch('/api/ai-coach/advice')
-        if (res.ok) { const { advice: a } = await res.json(); setAdvice(a) }
-      } catch {}
-      try {
-        const res = await fetch('/api/ai-coach/history')
-        if (res.ok) { const { messages: h } = await res.json(); setMessages(h ?? []) }
+        if (res.ok) { const { tip } = await res.json(); setAdvice(tip ?? '') }
       } catch {}
     }
     load()

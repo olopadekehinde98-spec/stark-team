@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (profile?.role !== 'leader' && profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await req.json()
-  if (!body.message || body.message.length < 50) return NextResponse.json({ error: 'Message must be at least 50 characters' }, { status: 400 })
+  if (!body.title) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
   const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
   const { data: limit } = await supabase.from('recognition_weekly_limits').select('count').eq('issuer_id', user.id).gte('week_start', weekStart.toISOString()).single()
   if (limit && limit.count >= 3) return NextResponse.json({ error: 'Weekly recognition limit (3) reached' }, { status: 429 })
