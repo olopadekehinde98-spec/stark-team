@@ -56,6 +56,7 @@ export default function AdminUsersPage() {
   const [toast, setToast]         = useState('')
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [deleting, setDeleting]   = useState<string | null>(null)
+  const [sponsorSearch, setSponsorSearch] = useState<Record<string, string>>({})
 
   useEffect(() => { loadUsers() }, [])
 
@@ -79,6 +80,23 @@ export default function AdminUsersPage() {
     if (r.ok) {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, rank } : u))
       flash('Rank updated ✓')
+    } else {
+      const e = await r.json()
+      flash('Error: ' + e.error)
+    }
+    setSaving(null)
+  }
+
+  async function updateSponsor(userId: string, sponsorId: string) {
+    setSaving(userId + ':sponsor')
+    const r = await fetch(`/api/admin/users/${userId}/sponsor`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sponsor_id: sponsorId || null }),
+    })
+    if (r.ok) {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, sponsor_id: sponsorId || null } : u))
+      flash('Sponsor updated ✓')
     } else {
       const e = await r.json()
       flash('Error: ' + e.error)
@@ -171,7 +189,7 @@ export default function AdminUsersPage() {
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:760 }}>
           <thead>
             <tr style={{ background:S.s2 }}>
-              {['Member','Email','Rank','Role','Status','Joined',''].map(h => (
+              {['Member','Email','Sponsor','Rank','Role','Status','Joined',''].map(h => (
                 <th key={h} style={{ padding:'11px 16px', textAlign:'left', fontSize:11, fontWeight:700, color:S.mu, borderBottom:`1px solid ${S.bd}`, letterSpacing:'0.05em', textTransform:'uppercase' }}>
                   {h}
                 </th>
@@ -209,6 +227,26 @@ export default function AdminUsersPage() {
 
                   {/* Email */}
                   <td style={{ padding:'12px 16px', fontSize:12, color:S.tx2 }}>{u.email ?? '—'}</td>
+
+                  {/* Sponsor dropdown */}
+                  <td style={{ padding:'12px 16px' }}>
+                    <select
+                      value={u.sponsor_id ?? ''}
+                      disabled={saving === u.id + ':sponsor'}
+                      onChange={e => updateSponsor(u.id, e.target.value)}
+                      style={{
+                        padding:'5px 10px', fontSize:12, borderRadius:6,
+                        border:`1px solid ${S.bd}`, background:S.s2, color:S.tx2,
+                        cursor:'pointer', outline:'none', maxWidth:130,
+                        opacity: saving === u.id + ':sponsor' ? 0.6 : 1,
+                      }}
+                    >
+                      <option value="">— None —</option>
+                      {users.filter(p => p.id !== u.id).map(p => (
+                        <option key={p.id} value={p.id}>{p.full_name}</option>
+                      ))}
+                    </select>
+                  </td>
 
                   {/* Rank dropdown */}
                   <td style={{ padding:'12px 16px' }}>

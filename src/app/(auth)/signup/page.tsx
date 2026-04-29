@@ -169,12 +169,20 @@ function SignupForm() {
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:S.tx2, marginBottom:6 }}>Password</label>
                 <div style={{ position:'relative' }}>
-                  <input type={showPw ? 'text' : 'password'} required minLength={8} value={password} onChange={e => setPassword(e.target.value)}
-                    style={{ ...inputStyle, paddingRight:44 }} placeholder="Min. 8 characters" />
+                  <input type={showPw ? 'text' : 'password'} required minLength={8} maxLength={128} value={password} onChange={e => setPassword(e.target.value)}
+                    style={{ ...inputStyle, paddingRight:44 }} placeholder="Enter your password" />
                   <button type="button" onClick={() => setShowPw(p => !p)}
                     style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:S.mu, padding:0 }}>
                     {showPw ? '🙈' : '👁'}
                   </button>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', marginTop:5 }}>
+                  <span style={{ fontSize:11, color: password.length > 0 && password.length < 8 ? S.err : S.mu }}>
+                    {password.length > 0 && password.length < 8 ? `${8 - password.length} more characters needed` : 'Minimum 8 characters'}
+                  </span>
+                  <span style={{ fontSize:11, color: password.length >= 8 ? '#16A34A' : S.mu }}>
+                    {password.length}/128
+                  </span>
                 </div>
               </div>
 

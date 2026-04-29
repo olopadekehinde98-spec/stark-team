@@ -14,9 +14,9 @@ const S = {
 }
 
 const CHANNELS = [
-  { id: 'general',    label: '# general',    desc: 'Open to everyone' },
-  { id: 'branch',     label: '# branch',     desc: 'Your branch members' },
-  { id: 'leadership', label: '# leadership', desc: 'Leaders & admins only' },
+  { id: 'general', label: '# general', desc: 'Open to everyone' },
+  { id: 'branch',  label: '# branch',  desc: 'Your branch members' },
+  { id: 'inbox',   label: '📥 inbox',  desc: 'Team inbox & announcements' },
 ]
 
 const RANK_COLOR: Record<string, string> = {
@@ -166,7 +166,7 @@ export default function ChatPage() {
         </div>
 
         <div style={{ padding: '10px 8px', flex: 1 }}>
-          {CHANNELS.filter(c => c.id !== 'leadership' || isLeaderOrAdmin).map(c => (
+          {CHANNELS.map(c => (
             <button
               key={c.id}
               onClick={() => setChannel(c.id)}

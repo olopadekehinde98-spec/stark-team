@@ -92,11 +92,16 @@ export default function ProfilePage() {
     if (!user) { setUploading(false); return }
     const ext  = file.name.split('.').pop()
     const path = `${user.id}/avatar.${ext}`
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (upErr) { setMsg('Upload failed: ' + upErr.message); setUploading(false); return }
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) {
+      setMsg('Upload failed: ' + upErr.message + '. Check that the avatars storage bucket exists and is public.')
+      setUploading(false)
+      return
+    }
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
     const avatar_url = urlData.publicUrl + '?t=' + Date.now()
-    await supabase.from('users').update({ avatar_url }).eq('id', user.id)
+    const { error: updateErr } = await supabase.from('users').update({ avatar_url }).eq('id', user.id)
+    if (updateErr) { setMsg('Photo uploaded but profile update failed: ' + updateErr.message); setUploading(false); return }
     setProfile((p: any) => ({ ...p, avatar_url }))
     setMsg('Photo updated!')
     setUploading(false)
@@ -203,10 +208,14 @@ export default function ProfilePage() {
               }}
             >
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-              ) : (
-                initials
-              )}
+                <img
+                  src={profile.avatar_url}
+                  alt="avatar"
+                  style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                />
+              ) : null}
+              {!profile.avatar_url && initials}
               {/* Overlay */}
               <div style={{
                 position:'absolute', inset:0, background:'rgba(0,0,0,0.35)',
