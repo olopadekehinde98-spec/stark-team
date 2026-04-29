@@ -1,6 +1,7 @@
 import Badge from './Badge'
 
 const rankLabels: Record<string, string> = {
+  member:            'Member',
   distributor:       'Distributor',
   manager:           'Manager',
   senior_manager:    'Senior Manager',

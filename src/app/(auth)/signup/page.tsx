@@ -74,7 +74,7 @@ function SignupForm() {
   }
 
   const rankMap: Record<string, string> = {
-    distributor: 'Distributor', manager: 'Manager',
+    member: 'Member', distributor: 'Distributor', manager: 'Manager',
     senior_manager: 'Senior Manager', executive_manager: 'Executive', director: 'Director',
   }
 
