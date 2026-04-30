@@ -99,7 +99,16 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media(max-width:768px){
+          .dash-stats{grid-template-columns:repeat(2,1fr) !important;}
+          .dash-main{grid-template-columns:1fr !important;}
+        }
+        @media(max-width:420px){
+          .dash-stats{grid-template-columns:1fr !important;}
+        }
+      `}</style>
 
       {/* Page header */}
       <div style={{ marginBottom:24 }}>
@@ -110,7 +119,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
+      <div className="dash-stats" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
         {[
           { icon:'📊', label:'Activities this month', value: data.total,    sub:`${data.verified} verified`,   badge:'+'+data.total, bc:S.ok   },
           { icon:'⚡', label:'Verified rate',          value:`${data.rate}%`, sub:'Target: 60%+',              badge:data.rate>=60?'Good':'Low',bc:data.rate>=60?S.ok:S.warn },
@@ -130,7 +139,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 290px', gap:18 }}>
+      <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'1fr 290px', gap:18 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
           {/* Recent Activities */}

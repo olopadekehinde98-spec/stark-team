@@ -16,7 +16,7 @@ const TYPE_COLORS: Record<string, string> = {
   monthly:'#D4A017', weekly:'#D97706', daily:'#2563EB', custom:'#7C3AED',
 }
 
-type GoalTab = 'pending_approval' | 'active' | 'completed' | 'failed' | 'archived'
+type GoalTab = 'pending_approval' | 'active' | 'completed' | 'rejected' | 'failed' | 'archived'
 
 function daysLeft(deadline: string) {
   const d = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)
@@ -50,12 +50,22 @@ export default async function GoalsPage({
     { key:'pending_approval', label:'Pending'   },
     { key:'active',           label:'Active'    },
     { key:'completed',        label:'Completed' },
+    { key:'rejected',         label:'Rejected'  },
     { key:'failed',           label:'Failed'    },
     { key:'archived',         label:'Archived'  },
   ]
 
   return (
     <div>
+      <style>{`
+        @media(max-width:640px){
+          .goals-tabs{flex-wrap:wrap !important;}
+          .goals-grid{grid-template-columns:1fr !important;}
+        }
+        @media(min-width:641px) and (max-width:900px){
+          .goals-grid{grid-template-columns:repeat(2,1fr) !important;}
+        }
+      `}</style>
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
         <div>
@@ -69,7 +79,7 @@ export default async function GoalsPage({
       </div>
 
       {/* Tab bar */}
-      <div style={{ display:'flex', gap:4, marginBottom:18 }}>
+      <div className="goals-tabs" style={{ display:'flex', gap:4, marginBottom:18 }}>
         {TABS.map(t => (
           <Link key={t.key} href={`?tab=${t.key}`} style={{
             padding:'7px 18px', borderRadius:20, fontSize:13, fontWeight:600, textDecoration:'none',
@@ -95,7 +105,7 @@ export default async function GoalsPage({
           )}
         </div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+        <div className="goals-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
           {list.map(g => {
             const pct   = g.target_value > 0 ? Math.min(100, Math.round(((g.current_value ?? 0) / g.target_value) * 100)) : 0
             const color = TYPE_COLORS[g.goal_type] ?? S.mu

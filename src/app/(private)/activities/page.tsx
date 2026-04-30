@@ -132,7 +132,8 @@ export default function ActivitiesPage() {
 
       {/* Table */}
       <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:540 }}>
           <thead>
             <tr style={{ background:S.s2 }}>
               {['Activity','Type','Date','Proof','Status',''].map(h => (
@@ -187,6 +188,7 @@ export default function ActivitiesPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
