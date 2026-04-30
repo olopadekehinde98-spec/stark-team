@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const { data: profile } = await supabase.from('users').select('role').eq('id',user.id).single()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const body = await request.json()
-  const { assigned_role = 'member', assigned_rank = 'distributor', assigned_email, expires_days = 7 } = body
+  const { assigned_role = 'member', assigned_rank = 'e_member', assigned_email, expires_days = 7 } = body
   const expires_at = new Date(Date.now() + expires_days * 86400000).toISOString()
   const admin = createAdminClient()
   const { data, error } = await admin.from('invite_links').insert({

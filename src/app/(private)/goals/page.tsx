@@ -16,7 +16,7 @@ const TYPE_COLORS: Record<string, string> = {
   monthly:'#D4A017', weekly:'#D97706', daily:'#2563EB', custom:'#7C3AED',
 }
 
-type GoalTab = 'active' | 'completed' | 'failed' | 'archived'
+type GoalTab = 'pending_approval' | 'active' | 'completed' | 'failed' | 'archived'
 
 function daysLeft(deadline: string) {
   const d = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)
@@ -47,10 +47,11 @@ export default async function GoalsPage({
   const list = goals ?? []
 
   const TABS: { key: GoalTab; label: string }[] = [
-    { key:'active',    label:'Active'    },
-    { key:'completed', label:'Completed' },
-    { key:'failed',    label:'Failed'    },
-    { key:'archived',  label:'Archived'  },
+    { key:'pending_approval', label:'Pending'   },
+    { key:'active',           label:'Active'    },
+    { key:'completed',        label:'Completed' },
+    { key:'failed',           label:'Failed'    },
+    { key:'archived',         label:'Archived'  },
   ]
 
   return (
@@ -59,7 +60,7 @@ export default async function GoalsPage({
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Goals</h1>
-          <p style={{ fontSize:13, color:S.tx2 }}>{list.length} {tab} goal{list.length!==1?'s':''}</p>
+          <p style={{ fontSize:13, color:S.tx2 }}>{list.length} {tab === 'pending_approval' ? 'pending' : tab} goal{list.length!==1?'s':''}</p>
         </div>
         <Link href="/goals/create" style={{
           padding:'9px 18px', borderRadius:8, background:S.navy,
@@ -84,7 +85,7 @@ export default async function GoalsPage({
           <div style={{ fontSize:32, marginBottom:12 }}>◎</div>
           <div style={{ fontSize:15, fontWeight:600, color:S.tx, marginBottom:6 }}>No {tab} goals</div>
           <div style={{ fontSize:13, color:S.mu, marginBottom:20 }}>
-            {tab === 'active' ? 'Set a goal to track your progress.' : `No ${tab} goals yet.`}
+            {tab === 'pending_approval' ? 'No goals awaiting approval.' : tab === 'active' ? 'Set a goal to track your progress.' : `No ${tab} goals yet.`}
           </div>
           {tab === 'active' && (
             <Link href="/goals/create" style={{

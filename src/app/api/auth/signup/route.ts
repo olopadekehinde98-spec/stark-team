@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (new Date(invite.expires_at) < new Date()) return NextResponse.json({ error: 'Invite expired' }, { status: 400 })
   const { data: authData, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } })
   if (signUpError || !authData.user) return NextResponse.json({ error: signUpError?.message ?? 'Signup failed' }, { status: 400 })
-  await admin.from('users').insert({ id: authData.user.id, email, full_name, username, role: invite.assigned_role ?? 'member', rank: invite.assigned_rank ?? 'distributor', branch_id: invite.assigned_branch ?? null })
+  await admin.from('users').insert({ id: authData.user.id, email, full_name, username, role: invite.assigned_role ?? 'member', rank: invite.assigned_rank ?? 'e_member', branch_id: invite.assigned_branch ?? null, invited_by: invite.created_by })
   await admin.from('invite_links').update({ is_active: false, used_by: authData.user.id }).eq('id', invite.id)
   return NextResponse.json({ user: authData.user }, { status: 201 })
 }

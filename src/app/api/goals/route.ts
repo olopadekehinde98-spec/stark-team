@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   if (!title || !goal_type || !target_metric || !deadline) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   const { data, error } = await supabase.from('goals').insert({
     user_id: user.id, title, goal_type, target_metric: Number(target_metric), deadline,
-    description: description||null, category: category||null,
+    description: description||null, category: category||null, status: 'pending_approval',
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ goal: data })

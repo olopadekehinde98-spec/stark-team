@@ -12,7 +12,7 @@ const S = {
 }
 
 const RANKS = [
-  { value:'member',            label:'Member'         },
+  { value:'e_member',          label:'E-Member'       },
   { value:'distributor',       label:'Distributor'    },
   { value:'manager',           label:'Manager'        },
   { value:'senior_manager',    label:'Senior Manager' },
