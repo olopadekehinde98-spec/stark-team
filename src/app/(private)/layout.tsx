@@ -184,9 +184,15 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
               🔔
               {notifCount > 0 && (
                 <span style={{
-                  position:'absolute', top: 5, right: 5,
-                  width: 8, height: 8, borderRadius: '50%', background:'#DC2626',
-                }}/>
+                  position:'absolute', top: -4, right: -4,
+                  minWidth: 18, height: 18, borderRadius: 9,
+                  background:'#DC2626', border: '2px solid #0F1C2E',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize: 9, fontWeight: 800, color: '#fff', lineHeight: 1,
+                  padding: '0 3px',
+                }}>
+                  {notifCount > 99 ? '99+' : notifCount}
+                </span>
               )}
             </Link>
 
@@ -305,16 +311,30 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {MORE_LINKS.map(link => {
                   const active = pathname.startsWith(link.href)
+                  const isNotif = link.href === '/notifications'
                   return (
                     <Link key={link.href} href={link.href} style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
                       gap: 6, padding: '14px 6px', borderRadius: 12,
-                      textDecoration: 'none',
+                      textDecoration: 'none', position: 'relative',
                       background: active ? 'rgba(212,160,23,0.15)' : 'rgba(255,255,255,0.05)',
                       border: `1px solid ${active ? 'rgba(212,160,23,0.3)' : 'rgba(255,255,255,0.08)'}`,
                       color: active ? S.gold : 'rgba(255,255,255,0.75)',
                     }}>
-                      <span style={{ fontSize: 22 }}>{link.icon}</span>
+                      <span style={{ fontSize: 22, position: 'relative' }}>
+                        {link.icon}
+                        {isNotif && notifCount > 0 && (
+                          <span style={{
+                            position:'absolute', top: -4, right: -6,
+                            minWidth: 16, height: 16, borderRadius: 8,
+                            background:'#DC2626', display:'flex', alignItems:'center',
+                            justifyContent:'center', fontSize: 8, fontWeight: 800,
+                            color: '#fff', padding: '0 2px', lineHeight: 1,
+                          }}>
+                            {notifCount > 99 ? '99+' : notifCount}
+                          </span>
+                        )}
+                      </span>
                       <span style={{ fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{link.label}</span>
                     </Link>
                   )

@@ -12,7 +12,7 @@ const S = {
 }
 
 const RANK_MAP: Record<string, string> = {
-  member:'Member', distributor:'Distributor', manager:'Manager',
+  e_member:'E-Member', distributor:'Distributor', manager:'Manager',
   senior_manager:'Senior Manager', executive_manager:'Executive', director:'Director',
 }
 
@@ -62,7 +62,7 @@ export default function AOLPage() {
           .limit(20),
         supabase.from('users')
           .select('id,full_name,rank,role,is_active')
-          .neq('id', user.id)
+          .eq('invited_by', user.id)
           .limit(20),
       ])
 
@@ -90,7 +90,16 @@ export default function AOLPage() {
 
   return (
     <div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media(max-width:768px){
+          .aol-stats{grid-template-columns:repeat(2,1fr) !important;}
+          .aol-main{grid-template-columns:1fr !important;}
+        }
+        @media(max-width:420px){
+          .aol-stats{grid-template-columns:1fr !important;}
+        }
+      `}</style>
 
       {/* Toast */}
       {toast && (
@@ -106,7 +115,7 @@ export default function AOLPage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
+      <div className="aol-stats" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
         {[
           { label:'Total Activities', value: activities.length, color: S.navy },
           { label:'Verified',         value: verified,           color: S.ok  },
@@ -120,7 +129,7 @@ export default function AOLPage() {
         ))}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:18 }}>
+      <div className="aol-main" style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:18 }}>
 
         {/* Recent activities */}
         <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>

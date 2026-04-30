@@ -11,7 +11,7 @@ const S = {
 }
 
 const RANK_MAP: Record<string, string> = {
-  distributor: 'Distributor', manager: 'Manager',
+  e_member: 'E-Member', distributor: 'Distributor', manager: 'Manager',
   senior_manager: 'Senior Manager', executive_manager: 'Executive', director: 'Director',
 }
 
@@ -181,7 +181,16 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        @media(max-width:768px){
+          .prof-grid{grid-template-columns:1fr !important;}
+          .prof-form-grid{grid-template-columns:1fr !important;}
+          .prof-stats{gap:12px !important;}
+          .prof-invite-grid{grid-template-columns:1fr !important;}
+        }
+      `}</style>
 
       {/* QR modal */}
       {showQrModal && inviteUrl && (
@@ -291,7 +300,7 @@ export default function ProfilePage() {
         <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:10, padding:20, marginBottom:18, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ fontSize:14, fontWeight:700, color:S.tx, marginBottom:16 }}>Edit Profile</div>
           {msg && <div style={{ marginBottom:12, fontSize:13, color:msg.includes('!')?S.ok:S.err }}>{msg}</div>}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+          <div className="prof-form-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
             {([['Full Name','full_name'],['Username','username']] as [string,string][]).map(([label, key]) => (
               <div key={key}>
                 <div style={{ fontSize:11, fontWeight:600, color:S.tx2, marginBottom:6 }}>{label}</div>
@@ -337,7 +346,7 @@ export default function ProfilePage() {
         </div>
 
         {inviteUrl ? (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:16, alignItems:'start' }}>
+          <div className="prof-invite-grid" style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:16, alignItems:'start' }}>
             <div>
               <div style={{
                 background:'rgba(255,255,255,0.7)', border:`1px solid ${S.goldBd}`, borderRadius:8,
@@ -372,7 +381,7 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Main grid ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
+      <div className="prof-grid" style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:16 }}>
         {/* Left */}
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {/* Recent Activities */}
