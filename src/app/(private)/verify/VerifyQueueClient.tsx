@@ -150,12 +150,6 @@ export default function VerifyQueueClient({
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom:22 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Verify Queue</h1>
-        <p style={{ fontSize:13, color:S.tx2 }}>Review and action pending submissions from your branch</p>
-      </div>
-
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:22 }}>
         {[
