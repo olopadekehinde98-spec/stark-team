@@ -41,10 +41,11 @@ export default function CreateGoalPage() {
       target_metric: Number(targetMetric),
       deadline,
       category: category || null,
+      status: 'pending_approval',
     })
     setLoading(false)
     if (insertError) { setError(insertError.message); return }
-    router.push('/goals')
+    router.push('/goals?tab=pending_approval')
   }
 
   const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0]
