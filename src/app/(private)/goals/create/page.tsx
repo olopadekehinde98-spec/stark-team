@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
 const S = {
   s1:'#FFFFFF', s2:'#F8FAFC', bd:'#E2E8F0',
@@ -31,20 +30,27 @@ export default function CreateGoalPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Not authenticated'); setLoading(false); return }
-    const { error: insertError } = await supabase.from('goals').insert({
-      user_id: user.id, title,
-      description: description || null,
-      goal_type: goalType,
-      target_value: Number(targetMetric),
-      deadline,
-      category: category || null,
-      status: 'pending_approval',
-    })
+    try {
+      const res  = await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description: description || null,
+          goal_type: goalType,
+          target_value: Number(targetMetric),
+          deadline,
+          category: category || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Failed to create goal'); setLoading(false); return }
+    } catch {
+      setError('Network error — please try again')
+      setLoading(false)
+      return
+    }
     setLoading(false)
-    if (insertError) { setError(insertError.message); return }
     router.push('/goals?tab=pending_approval')
   }
 

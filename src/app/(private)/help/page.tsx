@@ -216,6 +216,48 @@ export default function HelpPage() {
         </div>
       </Section>
 
+      {/* Install App */}
+      <Section title="Install Stark Team as an App on Your Phone" icon="📲">
+        <Alert type="blue">
+          Stark Team is a Progressive Web App (PWA) — you can add it to your phone's home screen so it opens like a real app, full-screen with no browser bar.
+        </Alert>
+
+        {/* Android */}
+        <div style={{ marginTop:18 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <span style={{ fontSize:22 }}>🤖</span>
+            <div style={{ fontSize:14, fontWeight:700, color:S.tx }}>Android Phone (Chrome)</div>
+          </div>
+          <Step n={1} text="Open starkteam.info in Google Chrome on your Android phone." />
+          <Step n={2} text="Tap the three-dot menu ⋮ in the top-right corner of Chrome." />
+          <Step n={3} text='Tap "Add to Home screen" (or "Install app" — they do the same thing).' />
+          <Step n={4} text='Tap "Add" or "Install" to confirm. The Stark Team icon will appear on your home screen.' />
+          <Step n={5} text="Tap the icon on your home screen — the app opens full-screen, like a real app!" />
+          <Alert type="ok">You can also tap the install banner that sometimes appears automatically at the bottom of the screen.</Alert>
+        </div>
+
+        {/* iOS */}
+        <div style={{ marginTop:22, paddingTop:18, borderTop:`1px solid ${S.bd}` }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <span style={{ fontSize:22 }}>🍎</span>
+            <div style={{ fontSize:14, fontWeight:700, color:S.tx }}>iPhone / iPad (iOS)</div>
+          </div>
+          <Alert type="warn">You MUST use Safari on iOS — Chrome on iPhone does not support adding apps to home screen.</Alert>
+          <Step n={1} text="Open starkteam.info in Safari (not Chrome)." />
+          <Step n={2} text="Tap the Share button at the bottom centre of the screen — it looks like a box with an arrow pointing up ⬆️." />
+          <Step n={3} text='Scroll down the share menu and tap "Add to Home Screen".' />
+          <Step n={4} text='Tap "Add" in the top-right corner.' />
+          <Step n={5} text="The Stark Team icon will appear on your home screen. Tap it to open the app full-screen!" />
+        </div>
+
+        <div style={{ background:S.goldBg, border:`1px solid ${S.goldBd}`, borderRadius:8, padding:'12px 16px', marginTop:16 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#92400E', marginBottom:6 }}>✨ Why install it?</div>
+          {['Opens full-screen — no browser address bar', 'Works much faster once installed', 'Feels and looks just like a native app', 'One tap from your home screen'].map(b => (
+            <div key={b} style={{ fontSize:12, color:'#78350F', marginBottom:3 }}>• {b}</div>
+          ))}
+        </div>
+      </Section>
+
       {/* Contact */}
       <Section title="Need More Help?" icon="📞">
         <p style={{ fontSize:13, color:S.tx2, lineHeight:1.8, marginTop:14 }}>

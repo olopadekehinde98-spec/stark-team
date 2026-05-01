@@ -173,7 +173,8 @@ export default function DashboardPage() {
                 No active goals — <Link href="/goals/create" style={{ color:S.blue }}>create one</Link>
               </div>
             ) : data.goals.map((g: any, i: number) => {
-              const pct = g.target_value > 0 ? Math.min(100, Math.round((g.current_value / g.target_value) * 100)) : 0
+              const cur = g.current_value ?? 0
+              const pct = g.target_value > 0 ? Math.min(100, Math.round((cur / g.target_value) * 100)) : 0
               const color = typeColor(g.goal_type)
               return (
                 <div key={i} style={{ marginBottom: i<data.goals.length-1 ? 16 : 0 }}>
@@ -188,7 +189,7 @@ export default function DashboardPage() {
                     <span style={{ background:S.s3, border:`1px solid ${S.bd}`, padding:'2px 8px', borderRadius:10, marginRight:7, fontSize:10, fontWeight:500 }}>
                       {g.goal_type ?? 'Goal'}
                     </span>
-                    {g.current_value}/{g.target_value}
+                    {cur}/{g.target_value}
                     {g.deadline ? ` · ${new Date(g.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : ''}
                   </div>
                 </div>
