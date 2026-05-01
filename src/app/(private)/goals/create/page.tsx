@@ -39,7 +39,6 @@ export default function CreateGoalPage() {
       description: description || null,
       goal_type: goalType,
       target_value: Number(targetMetric),
-      current_value: 0,
       deadline,
       category: category || null,
       status: 'pending_approval',

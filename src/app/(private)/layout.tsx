@@ -64,6 +64,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
   const [profile,    setProfile]    = useState<any>(null)
   const [notifCount, setNotif]      = useState(0)
   const [showMore,   setShowMore]   = useState(false)
+  const [avatarErr,  setAvatarErr]  = useState(false)
   const pathname = usePathname()
   const router   = useRouter()
 
@@ -73,7 +74,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       const [profRes, notifRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role').eq('id', user.id).single(),
+        supabase.from('users').select('full_name,rank,role,avatar_url').eq('id', user.id).single(),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
       ])
       setProfile(profRes.data)
@@ -216,7 +217,14 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
                 width: 30, height: 30, background: S.gold, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 800, color: S.navy, flexShrink: 0,
-              }}>{initials}</div>
+                overflow: 'hidden', position: 'relative',
+              }}>
+                {profile?.avatar_url && !avatarErr ? (
+                  <img src={profile.avatar_url} alt="avatar"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
+                    onError={() => setAvatarErr(true)} />
+                ) : initials}
+              </div>
               <div className="st-desktop-nav" style={{ flexDirection:'column' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
                   {profile?.full_name?.split(' ')[0] ?? '…'}
