@@ -144,6 +144,16 @@ export default function AdminUsersPage() {
 
   return (
     <div>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .adm-table{display:block;}
+        .adm-cards{display:none;}
+        @media(max-width:768px){
+          .adm-table{display:none;}
+          .adm-cards{display:flex;flex-direction:column;gap:12px;}
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <div>
@@ -191,8 +201,8 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {/* Table */}
-      <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'auto', boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+      {/* ── DESKTOP TABLE ─────────────────────────────────────── */}
+      <div className="adm-table" style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'auto', boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:920 }}>
           <thead>
             <tr>
@@ -209,7 +219,6 @@ export default function AdminUsersPage() {
                     <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${S.bd}`, borderTop:`2px solid ${S.navy}`, animation:'spin .7s linear infinite' }} />
                     Loading members…
                   </div>
-                  <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
@@ -222,19 +231,11 @@ export default function AdminUsersPage() {
               const pal      = PALETTES[i % PALETTES.length]
               const isActive = u.is_active !== false
               const busy     = (key: string) => saving === u.id + ':' + key
-
               return (
                 <tr key={u.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${S.bd}` : 'none' }}>
-
-                  {/* Member */}
                   <td style={tdStyle}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{
-                        width:34, height:34, borderRadius:'50%', flexShrink:0,
-                        background:pal.bg, border:`1px solid ${pal.bd}`,
-                        display:'flex', alignItems:'center', justifyContent:'center',
-                        fontSize:11, fontWeight:700, color:pal.tx,
-                      }}>
+                      <div style={{ width:34, height:34, borderRadius:'50%', flexShrink:0, background:pal.bg, border:`1px solid ${pal.bd}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:pal.tx }}>
                         {initials(u.full_name ?? '?')}
                       </div>
                       <div>
@@ -243,107 +244,53 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
                   </td>
-
-                  {/* Email */}
                   <td style={{ ...tdStyle, fontSize:12, color:S.tx2, maxWidth:180 }}>
-                    <div style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {u.email ?? <span style={{ color:S.mu }}>—</span>}
-                    </div>
+                    <div style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email ?? '—'}</div>
                   </td>
-
-                  {/* Sponsor */}
                   <td style={tdStyle}>
-                    <select
-                      value={u.invited_by ?? ''}
-                      disabled={!!busy('invited_by')}
+                    <select value={u.invited_by ?? ''} disabled={!!busy('invited_by')}
                       onChange={e => patch(u.id, 'invited_by', 'sponsor', { invited_by: e.target.value || null })}
-                      style={{ ...sel, opacity: busy('invited_by') ? 0.5 : 1 }}
-                    >
+                      style={{ ...sel, opacity: busy('invited_by') ? 0.5 : 1 }}>
                       <option value="">— None —</option>
-                      {users.filter(p => p.id !== u.id).map(p => (
-                        <option key={p.id} value={p.id}>{p.full_name}</option>
-                      ))}
+                      {users.filter(p => p.id !== u.id).map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                     </select>
                   </td>
-
-                  {/* Rank */}
                   <td style={tdStyle}>
-                    <select
-                      value={u.rank ?? 'member'}
-                      disabled={!!busy('rank')}
+                    <select value={u.rank ?? 'e_member'} disabled={!!busy('rank')}
                       onChange={e => patch(u.id, 'rank', 'rank', { rank: e.target.value })}
-                      style={{
-                        ...sel,
-                        border:`1px solid ${S.goldBd}`, background:S.goldBg, color:S.gold,
-                        fontWeight:600, opacity: busy('rank') ? 0.5 : 1,
-                      }}
-                    >
+                      style={{ ...sel, border:`1px solid ${S.goldBd}`, background:S.goldBg, color:S.gold, fontWeight:600, opacity: busy('rank') ? 0.5 : 1 }}>
                       {RANKS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
-                    {busy('rank') && <span style={{ marginLeft:6, fontSize:11, color:S.mu }}>saving…</span>}
                   </td>
-
-                  {/* Role */}
                   <td style={tdStyle}>
-                    <select
-                      value={u.role ?? 'member'}
-                      disabled={!!busy('role')}
+                    <select value={u.role ?? 'member'} disabled={!!busy('role')}
                       onChange={e => patch(u.id, 'role', 'role', { role: e.target.value })}
-                      style={{
-                        ...sel,
-                        border:`1px solid ${S.blueBd}`, background:S.blueBg, color:S.blue,
-                        fontWeight:600, opacity: busy('role') ? 0.5 : 1,
-                      }}
-                    >
+                      style={{ ...sel, border:`1px solid ${S.blueBd}`, background:S.blueBg, color:S.blue, fontWeight:600, opacity: busy('role') ? 0.5 : 1 }}>
                       {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
-                    {busy('role') && <span style={{ marginLeft:6, fontSize:11, color:S.mu }}>saving…</span>}
                   </td>
-
-                  {/* Status toggle */}
                   <td style={tdStyle}>
-                    <button
-                      onClick={() => patch(u.id, 'is_active', 'status', { is_active: !isActive })}
+                    <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: !isActive })}
                       disabled={!!busy('is_active')}
-                      title="Click to toggle active / inactive"
-                      style={{
-                        fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20,
-                        border:'none', cursor:'pointer',
-                        background: isActive ? S.okBg  : S.errBg,
-                        color:      isActive ? S.ok    : S.err,
-                        outline:   `1px solid ${isActive ? S.okBd : S.errBd}`,
-                        opacity: busy('is_active') ? 0.5 : 1,
-                        transition:'all 0.15s',
-                      }}
-                    >
+                      style={{ fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', background: isActive ? S.okBg : S.errBg, color: isActive ? S.ok : S.err, outline:`1px solid ${isActive ? S.okBd : S.errBd}`, opacity: busy('is_active') ? 0.5 : 1 }}>
                       {busy('is_active') ? '…' : isActive ? '● Active' : '○ Inactive'}
                     </button>
                   </td>
-
-                  {/* Joined */}
-                  <td style={{ ...tdStyle, fontSize:12, color:S.tx2, whiteSpace:'nowrap' }}>
-                    {fmtDate(u.created_at)}
-                  </td>
-
-                  {/* Delete */}
+                  <td style={{ ...tdStyle, fontSize:12, color:S.tx2, whiteSpace:'nowrap' }}>{fmtDate(u.created_at)}</td>
                   <td style={{ ...tdStyle, whiteSpace:'nowrap' }}>
                     {confirmDel === u.id ? (
-                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <button
-                          onClick={() => deleteUser(u.id)}
-                          disabled={deleting === u.id}
+                      <div style={{ display:'flex', gap:6 }}>
+                        <button onClick={() => deleteUser(u.id)} disabled={deleting === u.id}
                           style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:700, background:S.errBg, color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
                           {deleting === u.id ? '…' : 'Confirm'}
                         </button>
-                        <button
-                          onClick={() => setConfirmDel(null)}
-                          style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:S.s3, color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
+                        <button onClick={() => setConfirmDel(null)}
+                          style={{ padding:'5px 10px', borderRadius:6, fontSize:11, background:S.s3, color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
                           Cancel
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setConfirmDel(u.id)}
+                      <button onClick={() => setConfirmDel(u.id)}
                         style={{ padding:'5px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:'transparent', color:S.err, border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
                         🗑 Delete
                       </button>
@@ -354,6 +301,95 @@ export default function AdminUsersPage() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* ── MOBILE CARDS ──────────────────────────────────────── */}
+      <div className="adm-cards">
+        {loading ? (
+          <div style={{ textAlign:'center', padding:40, color:S.mu }}>
+            <div style={{ display:'inline-block', width:24, height:24, borderRadius:'50%', border:`3px solid ${S.bd}`, borderTop:`3px solid ${S.navy}`, animation:'spin .7s linear infinite' }} />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:'center', padding:40, color:S.mu, fontSize:13 }}>
+            {search ? 'No members match that search.' : 'No members found.'}
+          </div>
+        ) : filtered.map((u, i) => {
+          const pal      = PALETTES[i % PALETTES.length]
+          const isActive = u.is_active !== false
+          const busy     = (key: string) => saving === u.id + ':' + key
+          return (
+            <div key={u.id} style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:16, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+              {/* Top: avatar + name + status */}
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+                <div style={{ width:44, height:44, borderRadius:'50%', flexShrink:0, background:pal.bg, border:`1px solid ${pal.bd}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:pal.tx }}>
+                  {initials(u.full_name ?? '?')}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>{u.full_name ?? '—'}</div>
+                  <div style={{ fontSize:12, color:S.mu }}>@{u.username ?? '—'}</div>
+                  <div style={{ fontSize:12, color:S.tx2, marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email ?? '—'}</div>
+                </div>
+                <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: !isActive })}
+                  disabled={!!busy('is_active')}
+                  style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:20, border:'none', cursor:'pointer', flexShrink:0, background: isActive ? S.okBg : S.errBg, color: isActive ? S.ok : S.err, outline:`1px solid ${isActive ? S.okBd : S.errBd}` }}>
+                  {busy('is_active') ? '…' : isActive ? '● Active' : '○ Inactive'}
+                </button>
+              </div>
+
+              {/* Fields grid */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:S.mu, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>Rank</div>
+                  <select value={u.rank ?? 'e_member'} disabled={!!busy('rank')}
+                    onChange={e => patch(u.id, 'rank', 'rank', { rank: e.target.value })}
+                    style={{ width:'100%', padding:'7px 8px', fontSize:12, borderRadius:7, border:`1px solid ${S.goldBd}`, background:S.goldBg, color:S.gold, fontWeight:600, outline:'none' }}>
+                    {RANKS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:S.mu, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>Role</div>
+                  <select value={u.role ?? 'member'} disabled={!!busy('role')}
+                    onChange={e => patch(u.id, 'role', 'role', { role: e.target.value })}
+                    style={{ width:'100%', padding:'7px 8px', fontSize:12, borderRadius:7, border:`1px solid ${S.blueBd}`, background:S.blueBg, color:S.blue, fontWeight:600, outline:'none' }}>
+                    {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:S.mu, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>Sponsor</div>
+                <select value={u.invited_by ?? ''} disabled={!!busy('invited_by')}
+                  onChange={e => patch(u.id, 'invited_by', 'sponsor', { invited_by: e.target.value || null })}
+                  style={{ width:'100%', padding:'7px 8px', fontSize:12, borderRadius:7, border:`1px solid ${S.bd}`, background:S.s2, color:S.tx, outline:'none' }}>
+                  <option value="">— None —</option>
+                  {users.filter(p => p.id !== u.id).map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                </select>
+              </div>
+
+              {/* Footer: joined + delete */}
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:`1px solid ${S.bd}` }}>
+                <span style={{ fontSize:11, color:S.mu }}>Joined {fmtDate(u.created_at)}</span>
+                {confirmDel === u.id ? (
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={() => deleteUser(u.id)} disabled={deleting === u.id}
+                      style={{ padding:'5px 12px', borderRadius:6, fontSize:12, fontWeight:700, background:S.err, color:'#fff', border:'none', cursor:'pointer' }}>
+                      {deleting === u.id ? '…' : 'Confirm Delete'}
+                    </button>
+                    <button onClick={() => setConfirmDel(null)}
+                      style={{ padding:'5px 12px', borderRadius:6, fontSize:12, background:S.s3, color:S.tx2, border:`1px solid ${S.bd}`, cursor:'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDel(u.id)}
+                    style={{ padding:'5px 12px', borderRadius:6, fontSize:12, fontWeight:600, color:S.err, background:'transparent', border:`1px solid ${S.errBd}`, cursor:'pointer' }}>
+                    🗑 Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

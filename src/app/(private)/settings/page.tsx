@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 const S = {
@@ -10,12 +10,13 @@ const S = {
   err:'#DC2626', errBg:'#FEF2F2', errBd:'#FCA5A5',
 }
 
-type Tab = 'profile' | 'security' | 'notifications'
+type Tab = 'profile' | 'security' | 'notifications' | 'app'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key:'profile',       label:'Profile',       icon:'👤' },
   { key:'security',      label:'Security',      icon:'🔒' },
   { key:'notifications', label:'Notifications', icon:'🔔' },
+  { key:'app',           label:'Install App',   icon:'📲' },
 ]
 
 const NOTIF_PREFS = [
@@ -28,15 +29,19 @@ const NOTIF_PREFS = [
 ]
 
 export default function SettingsPage() {
-  const [tab,      setTab]      = useState<Tab>('profile')
-  const [profile,  setProfile]  = useState<any>(null)
-  const [fullName, setFullName] = useState('')
-  const [bio,      setBio]      = useState('')
-  const [saving,   setSaving]   = useState(false)
-  const [msg,      setMsg]      = useState<{ text:string; ok:boolean }|null>(null)
-  const [toggles,  setToggles]  = useState<Record<string,boolean>>({})
-  const [showPw,   setShowPw]   = useState(false)
-  const [pwSent,   setPwSent]   = useState(false)
+  const [tab,        setTab]      = useState<Tab>('profile')
+  const [profile,    setProfile]  = useState<any>(null)
+  const [fullName,   setFullName] = useState('')
+  const [bio,        setBio]      = useState('')
+  const [saving,     setSaving]   = useState(false)
+  const [msg,        setMsg]      = useState<{ text:string; ok:boolean }|null>(null)
+  const [toggles,    setToggles]  = useState<Record<string,boolean>>({})
+  const [showPw,     setShowPw]   = useState(false)
+  const [pwSent,     setPwSent]   = useState(false)
+  const [installable,setInstallable] = useState(false)
+  const [installed,  setInstalled]   = useState(false)
+  const [isIOS,      setIsIOS]       = useState(false)
+  const deferredPrompt = useRef<any>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -52,7 +57,23 @@ export default function SettingsPage() {
         setToggles(t)
       })
     })
+    // PWA detection
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream)
+    setInstalled(window.matchMedia('(display-mode: standalone)').matches)
+    const handler = (e: Event) => { e.preventDefault(); deferredPrompt.current = e; setInstallable(true) }
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', () => { setInstalled(true); setInstallable(false) })
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
+
+  async function handleInstall() {
+    if (!deferredPrompt.current) return
+    deferredPrompt.current.prompt()
+    const { outcome } = await deferredPrompt.current.userChoice
+    if (outcome === 'accepted') setInstalled(true)
+    deferredPrompt.current = null
+    setInstallable(false)
+  }
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault()
@@ -223,7 +244,6 @@ export default function SettingsPage() {
                   <div style={{ fontSize:13, fontWeight:600, color:S.tx, marginBottom:2 }}>{p.label}</div>
                   <div style={{ fontSize:12, color:S.mu }}>{p.desc}</div>
                 </div>
-                {/* Toggle switch */}
                 <div
                   onClick={() => setToggles(prev => ({ ...prev, [p.key]: !prev[p.key] }))}
                   style={{
@@ -253,6 +273,99 @@ export default function SettingsPage() {
             </button>
           </div>
         </>
+      )}
+
+      {/* ── INSTALL APP ── */}
+      {tab === 'app' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+          {/* Already installed banner */}
+          {installed && (
+            <div style={{ background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
+              <span style={{ fontSize:24 }}>✅</span>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.ok }}>App Already Installed!</div>
+                <div style={{ fontSize:13, color:S.ok, marginTop:2 }}>Stark Team is running as an installed app on this device.</div>
+              </div>
+            </div>
+          )}
+
+          {/* Android / Chrome install */}
+          {!isIOS && (
+            <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:22, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                <div style={{ width:44, height:44, borderRadius:10, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>🤖</div>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>Android / Chrome</div>
+                  <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Install directly from this page</div>
+                </div>
+              </div>
+
+              {installable ? (
+                <button onClick={handleInstall} style={{
+                  width:'100%', padding:'13px', borderRadius:10, fontSize:14, fontWeight:700,
+                  background:S.navy, color:'#fff', border:'none', cursor:'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                }}>
+                  📲 Install Stark Team App
+                </button>
+              ) : !installed ? (
+                <div>
+                  <div style={{ fontSize:13, color:S.tx2, marginBottom:14, lineHeight:1.6 }}>
+                    Follow these steps in <strong>Chrome</strong> on your Android phone:
+                  </div>
+                  {[
+                    { n:1, text:'Open starkteam.info in Chrome' },
+                    { n:2, text:'Tap the ⋮ menu (top-right corner)' },
+                    { n:3, text:'Tap "Add to Home screen" or "Install app"' },
+                    { n:4, text:'Tap "Add" or "Install" to confirm' },
+                  ].map(s => (
+                    <div key={s.n} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:10 }}>
+                      <div style={{ width:24, height:24, borderRadius:'50%', background:S.navy, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0 }}>{s.n}</div>
+                      <div style={{ fontSize:13, color:S.tx, paddingTop:4 }}>{s.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize:13, color:S.ok, fontWeight:600, textAlign:'center', padding:'10px 0' }}>✅ Already installed on this device</div>
+              )}
+            </div>
+          )}
+
+          {/* iOS / Safari install */}
+          <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:22, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+              <div style={{ width:44, height:44, borderRadius:10, background:'#F5F3FF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>🍎</div>
+              <div>
+                <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>iPhone / iPad (iOS)</div>
+                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Install via Safari browser</div>
+              </div>
+            </div>
+            <div style={{ fontSize:13, color:S.tx2, marginBottom:14, lineHeight:1.6 }}>
+              <strong>Important:</strong> Must use <strong>Safari</strong> — Chrome on iOS does not support installation.
+            </div>
+            {[
+              { n:1, text:'Open starkteam.info in Safari' },
+              { n:2, text:'Tap the Share button at the bottom (the box with an arrow pointing up ↑)' },
+              { n:3, text:'Scroll down and tap "Add to Home Screen"' },
+              { n:4, text:'Tap "Add" in the top-right corner' },
+              { n:5, text:'The Stark Team icon will appear on your home screen' },
+            ].map(s => (
+              <div key={s.n} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:10 }}>
+                <div style={{ width:24, height:24, borderRadius:'50%', background:'#7C3AED', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0 }}>{s.n}</div>
+                <div style={{ fontSize:13, color:S.tx, paddingTop:4 }}>{s.text}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Benefits */}
+          <div style={{ background:S.goldBg, border:`1px solid ${S.goldBd}`, borderRadius:10, padding:'14px 18px' }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#92400E', marginBottom:8 }}>✨ Benefits of installing</div>
+            {['Works without opening a browser','Full-screen experience with no address bar','Faster load times','Looks and feels like a native app'].map(b => (
+              <div key={b} style={{ fontSize:12, color:'#78350F', marginBottom:4 }}>• {b}</div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
