@@ -38,7 +38,7 @@ export default function CreateGoalPage() {
           title,
           description: description || null,
           goal_type: goalType,
-          target_value: Number(targetMetric),
+          target_metric: Number(targetMetric),
           deadline,
           category: category || null,
         }),

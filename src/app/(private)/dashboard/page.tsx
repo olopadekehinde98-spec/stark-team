@@ -46,7 +46,7 @@ export default function DashboardPage() {
       const [profileRes, actsRes, goalsRes, recentRes, weeklyTopRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),
         supabase.from('activities').select('status').eq('user_id', user.id),
-        supabase.from('goals').select('title,status,target_value,current_value,goal_type,deadline').eq('user_id', user.id).eq('status','active').limit(2),
+        supabase.from('goals').select('title,status,target_metric,current_metric,goal_type,deadline').eq('user_id', user.id).eq('status','active').limit(2),
         supabase.from('activities').select('id,title,activity_type,status,submitted_at').eq('user_id', user.id)
           .order('submitted_at', { ascending: false }).limit(5),
         fetch('/api/leaderboard/live?period=weekly').then(r => r.json()).catch(() => ({ entries: [] })),
@@ -173,8 +173,8 @@ export default function DashboardPage() {
                 No active goals — <Link href="/goals/create" style={{ color:S.blue }}>create one</Link>
               </div>
             ) : data.goals.map((g: any, i: number) => {
-              const cur = g.current_value ?? 0
-              const pct = g.target_value > 0 ? Math.min(100, Math.round((cur / g.target_value) * 100)) : 0
+              const cur = g.current_metric ?? 0
+              const pct = g.target_metric > 0 ? Math.min(100, Math.round((cur / g.target_metric) * 100)) : 0
               const color = typeColor(g.goal_type)
               return (
                 <div key={i} style={{ marginBottom: i<data.goals.length-1 ? 16 : 0 }}>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                     <span style={{ background:S.s3, border:`1px solid ${S.bd}`, padding:'2px 8px', borderRadius:10, marginRight:7, fontSize:10, fontWeight:500 }}>
                       {g.goal_type ?? 'Goal'}
                     </span>
-                    {cur}/{g.target_value}
+                    {cur}/{g.target_metric}
                     {g.deadline ? ` · ${new Date(g.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : ''}
                   </div>
                 </div>

@@ -59,7 +59,7 @@ export default async function VerifyPage() {
     memberIds.length
       ? admin
           .from('goals')
-          .select('id,title,goal_type,target_value,deadline,description,created_at,user_id')
+          .select('id,title,goal_type,target_metric,deadline,description,created_at,user_id')
           .eq('status', 'pending_approval')
           .in('user_id', memberIds)
           .order('created_at', { ascending: true })

@@ -39,7 +39,7 @@ export default async function GoalsPage({
 
   const { data: goals } = await supabase
     .from('goals')
-    .select('id,title,goal_type,status,target_value,current_value,deadline,description')
+    .select('id,title,goal_type,status,target_metric,current_metric,deadline,description')
     .eq('user_id', user.id)
     .eq('status', tab)
     .order('created_at', { ascending: false })
@@ -107,7 +107,7 @@ export default async function GoalsPage({
       ) : (
         <div className="goals-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
           {list.map(g => {
-            const pct   = g.target_value > 0 ? Math.min(100, Math.round(((g.current_value ?? 0) / g.target_value) * 100)) : 0
+            const pct   = g.target_metric > 0 ? Math.min(100, Math.round(((g.current_metric ?? 0) / g.target_metric) * 100)) : 0
             const color = TYPE_COLORS[g.goal_type] ?? S.mu
             return (
               <Link key={g.id} href={`/goals/${g.id}`} style={{ textDecoration:'none' }}>
@@ -131,7 +131,7 @@ export default async function GoalsPage({
 
                   {/* Progress */}
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:12, color:S.tx2 }}>{g.current_value ?? 0} / {g.target_value}</span>
+                    <span style={{ fontSize:12, color:S.tx2 }}>{g.current_metric ?? 0} / {g.target_metric}</span>
                     <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:12, color, fontWeight:600 }}>{pct}%</span>
                   </div>
                   <div style={{ height:6, background:S.s3, borderRadius:3, overflow:'hidden', marginBottom:10 }}>

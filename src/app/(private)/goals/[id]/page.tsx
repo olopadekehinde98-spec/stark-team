@@ -131,7 +131,7 @@ export default function GoalDetailPage() {
   )
   if (!goal) return null
 
-  const pct   = goal.target_value > 0 ? Math.min(100, Math.round(((goal.current_value ?? 0) / goal.target_value) * 100)) : 0
+  const pct   = goal.target_metric > 0 ? Math.min(100, Math.round(((goal.current_metric ?? 0) / goal.target_metric) * 100)) : 0
   const color = TYPE_COLORS[goal.goal_type] ?? S.mu
   const dl    = goal.deadline ? daysLeft(goal.deadline) : null
 
@@ -195,8 +195,8 @@ export default function GoalDetailPage() {
             <div style={{ width:`${pct}%`, height:'100%', borderRadius:5, background:color, transition:'width .4s ease' }} />
           </div>
           <div style={{ display:'flex', justifyContent:'space-between' }}>
-            <span style={{ fontSize:12, color:S.mu }}>Current: <strong style={{ color:S.tx }}>{goal.current_value ?? 0}</strong></span>
-            <span style={{ fontSize:12, color:S.mu }}>Target: <strong style={{ color:S.tx }}>{goal.target_value}</strong></span>
+            <span style={{ fontSize:12, color:S.mu }}>Current: <strong style={{ color:S.tx }}>{goal.current_metric ?? 0}</strong></span>
+            <span style={{ fontSize:12, color:S.mu }}>Target: <strong style={{ color:S.tx }}>{goal.target_metric}</strong></span>
           </div>
         </div>
 
