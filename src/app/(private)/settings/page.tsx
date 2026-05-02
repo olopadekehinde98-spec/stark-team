@@ -38,9 +38,10 @@ export default function SettingsPage() {
   const [toggles,    setToggles]  = useState<Record<string,boolean>>({})
   const [showPw,     setShowPw]   = useState(false)
   const [pwSent,     setPwSent]   = useState(false)
-  const [installable,setInstallable] = useState(false)
-  const [installed,  setInstalled]   = useState(false)
-  const [isIOS,      setIsIOS]       = useState(false)
+  const [installable,  setInstallable]   = useState(false)
+  const [installed,    setInstalled]     = useState(false)
+  const [isStandalone, setIsStandalone]  = useState(false)
+  const [isIOS,        setIsIOS]         = useState(false)
   const deferredPrompt = useRef<any>(null)
 
   useEffect(() => {
@@ -58,9 +59,14 @@ export default function SettingsPage() {
       })
     })
     // PWA detection
-    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream)
-    // Only mark "installed" when the appinstalled event fires — not from matchMedia
-    // (matchMedia standalone can be a false positive on some Android browsers)
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    setIsIOS(ios)
+    // Check if already running as installed standalone app
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as any).standalone === true
+    setIsStandalone(standalone)
+    if (standalone) setInstalled(true)
+
     const handler = (e: Event) => { e.preventDefault(); deferredPrompt.current = e; setInstallable(true) }
     window.addEventListener('beforeinstallprompt', handler)
     window.addEventListener('appinstalled', () => { setInstalled(true); setInstallable(false) })
@@ -280,93 +286,129 @@ export default function SettingsPage() {
       {tab === 'app' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
-          {/* Already installed */}
-          {installed && (
+          {/* Running as installed standalone */}
+          {isStandalone && (
             <div style={{ background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
-              <span style={{ fontSize:24 }}>✅</span>
+              <span style={{ fontSize:28 }}>✅</span>
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:S.ok }}>Already Installed!</div>
-                <div style={{ fontSize:13, color:S.ok, marginTop:2 }}>Stark Team is running as an installed app on this device.</div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.ok }}>You're using the installed app!</div>
+                <div style={{ fontSize:13, color:S.ok, marginTop:2 }}>Stark Team is running as a full-screen app on this device.</div>
               </div>
             </div>
           )}
 
-          {/* Quick-install button when Chrome offers it */}
-          {installable && !installed && (
+          {/* Quick-install button — Chrome is offering it right now */}
+          {installable && !isStandalone && (
             <div style={{ background:S.navy, borderRadius:12, padding:20 }}>
               <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', marginBottom:10 }}>
-                Your browser is ready to install Stark Team as an app on this device.
+                Tap below to install Stark Team as an app on this device — no app store needed!
               </div>
               <button onClick={handleInstall} style={{
-                width:'100%', padding:'13px', borderRadius:10, fontSize:14, fontWeight:700,
+                width:'100%', padding:'14px', borderRadius:10, fontSize:15, fontWeight:700,
                 background:S.gold, color:S.navy, border:'none', cursor:'pointer',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8,
               }}>
-                📲 Add Stark Team to Home Screen
+                📲 Install Stark Team App
               </button>
             </div>
           )}
 
-          {/* Android instructions — always visible */}
+          {/* Installed but via browser shortcut warning */}
+          {installed && !isStandalone && (
+            <div style={{ background:'#FFFBEB', border:'1px solid #FCD34D', borderRadius:10, padding:'12px 16px', fontSize:13, color:'#92400E' }}>
+              ⚠️ It looks like it was installed as a <strong>browser shortcut</strong> (opens inside Chrome, not full-screen).
+              To get the real full-screen app, follow the steps below to re-install it properly.
+            </div>
+          )}
+
+          {/* Android — manual steps, always shown */}
           <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:22, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
               <div style={{ width:44, height:44, borderRadius:10, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>🤖</div>
               <div>
                 <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>Android Phone</div>
-                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Add to home screen in 4 steps</div>
+                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Install in Chrome — takes 30 seconds</div>
               </div>
             </div>
             <div style={{ fontSize:13, color:S.tx2, marginBottom:14, lineHeight:1.6 }}>
               Open <strong>starkteam.info</strong> in <strong>Chrome</strong>, then:
             </div>
             {[
-              { n:1, icon:'⋮', text:'Tap the three-dot menu in the top-right corner of Chrome' },
-              { n:2, icon:'🏠', text:'Tap "Add to Home screen" (or "Install app")' },
-              { n:3, icon:'✅', text:'Tap "Add" or "Install" to confirm' },
-              { n:4, icon:'📲', text:'Tap the Stark Team icon on your home screen — it opens full-screen!' },
-            ].map(s => (
-              <div key={s.n} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:12 }}>
-                <div style={{ width:28, height:28, borderRadius:'50%', background:S.navy, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
-                <div style={{ fontSize:13, color:S.tx, paddingTop:6, lineHeight:1.5 }}>{s.text}</div>
+              'Tap the three-dot menu ⋮ in the top-right corner of Chrome',
+              'Tap "Add to Home screen" or "Install app"',
+              'Tap "Install" (NOT "Add shortcut" — that opens in browser)',
+              'The Stark Team icon will appear on your home screen',
+              'Tap it — it opens full-screen with no browser bar!',
+            ].map((text, i) => (
+              <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:12 }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:S.navy, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, marginTop:1 }}>{i+1}</div>
+                <div style={{ fontSize:13, color:S.tx, paddingTop:6, lineHeight:1.5 }}>{text}</div>
               </div>
             ))}
+            <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#1e40af', marginTop:4 }}>
+              💡 If you installed it before as a shortcut: go to Chrome menu → Settings → Apps → Stark Team → Remove, then re-install using the steps above.
+            </div>
           </div>
 
-          {/* iOS instructions — always visible */}
+          {/* iOS */}
           <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:22, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
               <div style={{ width:44, height:44, borderRadius:10, background:'#F5F3FF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>🍎</div>
               <div>
-                <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>iPhone / iPad (iOS)</div>
-                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Add to home screen via Safari</div>
+                <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>iPhone / iPad</div>
+                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Use Safari — not Chrome</div>
               </div>
             </div>
-            <div style={{ background:'#FFFBEB', border:'1px solid #FCD34D', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#92400E', marginBottom:14, lineHeight:1.6 }}>
-              ⚠️ <strong>Must use Safari</strong> — Chrome on iPhone cannot install apps to home screen.
+            <div style={{ background:'#FFFBEB', border:'1px solid #FCD34D', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#92400E', marginBottom:14 }}>
+              ⚠️ <strong>Must use Safari.</strong> Chrome on iPhone does not support PWA install.
             </div>
             {[
-              { n:1, text:'Open starkteam.info in Safari (not Chrome)' },
-              { n:2, text:'Tap the Share ⬆️ button at the bottom-centre of Safari' },
-              { n:3, text:'Scroll the share menu and tap "Add to Home Screen"' },
-              { n:4, text:'Tap "Add" in the top-right corner' },
-              { n:5, text:'Tap the Stark Team icon on your home screen — it opens full-screen!' },
-            ].map(s => (
-              <div key={s.n} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:12 }}>
-                <div style={{ width:28, height:28, borderRadius:'50%', background:'#7C3AED', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
-                <div style={{ fontSize:13, color:S.tx, paddingTop:6, lineHeight:1.5 }}>{s.text}</div>
+              'Open starkteam.info in Safari',
+              'Tap the Share ⬆️ button at the bottom of Safari',
+              'Scroll and tap "Add to Home Screen"',
+              'Tap "Add" — the icon appears on your home screen',
+              'Open it — runs full-screen like a native app!',
+            ].map((text, i) => (
+              <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:12 }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:'#7C3AED', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:800, flexShrink:0, marginTop:1 }}>{i+1}</div>
+                <div style={{ fontSize:13, color:S.tx, paddingTop:6, lineHeight:1.5 }}>{text}</div>
               </div>
             ))}
+          </div>
+
+          {/* Alternative: PWABuilder APK */}
+          <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:22, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+              <div style={{ width:44, height:44, borderRadius:10, background:'#F0FDF4', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>📦</div>
+              <div>
+                <div style={{ fontSize:15, fontWeight:700, color:S.tx }}>Get an APK (Android Install File)</div>
+                <div style={{ fontSize:12, color:S.mu, marginTop:2 }}>Alternative to Play Store — install directly</div>
+              </div>
+            </div>
+            <div style={{ fontSize:13, color:S.tx2, lineHeight:1.7, marginBottom:14 }}>
+              You can generate a real Android app file (APK) for Stark Team using the free <strong>PWABuilder</strong> tool — no Play Store needed.
+            </div>
+            {[
+              'Visit pwabuilder.com on a computer',
+              'Enter starkteam.info and click Start',
+              'Click "Build My PWA" then choose Android',
+              'Download the APK file',
+              'Send it to your phone and open it to install',
+            ].map((text, i) => (
+              <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:10 }}>
+                <div style={{ width:24, height:24, borderRadius:'50%', background:S.ok, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, flexShrink:0, marginTop:1 }}>{i+1}</div>
+                <div style={{ fontSize:13, color:S.tx, paddingTop:3, lineHeight:1.5 }}>{text}</div>
+              </div>
+            ))}
+            <div style={{ background:S.s2, border:`1px solid ${S.bd}`, borderRadius:8, padding:'8px 12px', fontSize:12, color:S.mu, marginTop:6 }}>
+              ℹ️ You may need to allow "Install from unknown sources" in your Android settings when installing the APK.
+            </div>
           </div>
 
           {/* Benefits */}
           <div style={{ background:S.goldBg, border:`1px solid ${S.goldBd}`, borderRadius:10, padding:'14px 18px' }}>
             <div style={{ fontSize:13, fontWeight:700, color:'#92400E', marginBottom:8 }}>✨ Why install as an app?</div>
-            {[
-              'Opens full-screen — no browser address bar',
-              'Faster loading once installed',
-              'Looks and feels just like a native app',
-              'One tap from your home screen',
-            ].map(b => (
+            {['Full-screen — no browser address bar', 'Faster loading', 'Looks like a native app', 'One tap from your home screen'].map(b => (
               <div key={b} style={{ fontSize:12, color:'#78350F', marginBottom:4 }}>• {b}</div>
             ))}
           </div>
