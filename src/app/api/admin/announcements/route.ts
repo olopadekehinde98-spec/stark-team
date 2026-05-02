@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPushToAll } from '@/lib/push'
 
 export async function GET(_req: NextRequest) {
   const supabase = await createClient()
@@ -21,5 +22,14 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data, error } = await admin.from('announcements').insert({ ...body, created_by: user.id }).select('*,author:created_by(full_name)').single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  // Push to all members (fire-and-forget)
+  sendPushToAll({
+    title: `📢 ${data.title}`,
+    body:  data.body?.slice(0, 120) ?? '',
+    url:   '/dashboard',
+    tag:   'announcement',
+  }).catch(() => {})
+
   return NextResponse.json(data, { status: 201 })
 }

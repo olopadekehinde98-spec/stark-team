@@ -42,6 +42,8 @@ export default function SettingsPage() {
   const [installed,    setInstalled]     = useState(false)
   const [isStandalone, setIsStandalone]  = useState(false)
   const [isIOS,        setIsIOS]         = useState(false)
+  const [pushStatus,   setPushStatus]    = useState<'unknown'|'granted'|'denied'|'unsupported'>('unknown')
+  const [pushLoading,  setPushLoading]   = useState(false)
   const deferredPrompt = useRef<any>(null)
 
   useEffect(() => {
@@ -58,6 +60,15 @@ export default function SettingsPage() {
         setToggles(t)
       })
     })
+    // Push notification status
+    if (!('PushManager' in window)) {
+      setPushStatus('unsupported')
+    } else if (Notification.permission === 'granted') {
+      setPushStatus('granted')
+    } else if (Notification.permission === 'denied') {
+      setPushStatus('denied')
+    }
+
     // PWA detection
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
     setIsIOS(ios)
@@ -110,6 +121,54 @@ export default function SettingsPage() {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     setPwSent(true)
+  }
+
+  async function enablePush() {
+    if (!('PushManager' in window) || !('serviceWorker' in navigator)) return
+    setPushLoading(true)
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') { setPushStatus('denied'); setPushLoading(false); return }
+      const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) await existing.unsubscribe()
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+      })
+      const json = sub.toJSON()
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
+      })
+      setPushStatus('granted')
+      setMsg({ text: '🔔 Push notifications enabled!', ok: true })
+    } catch (e) {
+      setMsg({ text: 'Could not enable notifications. Try again.', ok: false })
+    }
+    setPushLoading(false)
+  }
+
+  async function disablePush() {
+    setPushLoading(true)
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        })
+        await sub.unsubscribe()
+      }
+      setPushStatus('unknown')
+      setMsg({ text: 'Push notifications disabled.', ok: true })
+    } catch {
+      setMsg({ text: 'Could not disable notifications.', ok: false })
+    }
+    setPushLoading(false)
   }
 
   const input: React.CSSProperties = {
@@ -241,6 +300,47 @@ export default function SettingsPage() {
       {/* ── NOTIFICATIONS ── */}
       {tab === 'notifications' && (
         <>
+          {/* Push notification card */}
+          <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, padding:'18px 20px', marginBottom:16, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+              <span style={{ fontSize:22 }}>🔔</span>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.tx }}>Phone Push Notifications</div>
+                <div style={{ fontSize:12, color:S.mu, marginTop:1 }}>Get notified on your phone even when the app is closed</div>
+              </div>
+            </div>
+
+            {pushStatus === 'unsupported' && (
+              <div style={{ fontSize:13, color:S.mu, background:S.s3, borderRadius:8, padding:'10px 14px' }}>
+                Push notifications are not supported on this browser. Try Chrome on Android.
+              </div>
+            )}
+            {pushStatus === 'denied' && (
+              <div style={{ fontSize:13, color:S.err, background:S.errBg, border:`1px solid ${S.errBd}`, borderRadius:8, padding:'10px 14px' }}>
+                ❌ Notifications are blocked. Go to your browser settings → Site Settings → Notifications → Allow starkteam.info
+              </div>
+            )}
+            {pushStatus === 'granted' && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                <div style={{ fontSize:13, color:S.ok, fontWeight:600 }}>✅ Push notifications are ON</div>
+                <button onClick={disablePush} disabled={pushLoading} style={{
+                  padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer',
+                  background:S.errBg, color:S.err, border:`1px solid ${S.errBd}`,
+                }}>
+                  {pushLoading ? 'Please wait…' : 'Turn Off'}
+                </button>
+              </div>
+            )}
+            {(pushStatus === 'unknown') && (
+              <button onClick={enablePush} disabled={pushLoading} style={{
+                width:'100%', padding:'11px', borderRadius:9, fontSize:14, fontWeight:700, cursor:'pointer',
+                background: pushLoading ? S.mu : S.navy, color:'#fff', border:'none',
+              }}>
+                {pushLoading ? 'Requesting permission…' : '🔔 Enable Push Notifications'}
+              </button>
+            )}
+          </div>
+
           <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'hidden', marginBottom:16, boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
             {NOTIF_PREFS.map((p, i) => (
               <div key={p.key} style={{
