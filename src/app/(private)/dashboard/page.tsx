@@ -30,9 +30,10 @@ function greeting() {
 }
 
 export default function DashboardPage() {
-  const [data,    setData]    = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [myId,    setMyId]    = useState<string | null>(null)
+  const [data,          setData]          = useState<any>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [myId,          setMyId]          = useState<string | null>(null)
+  const [announcements, setAnnouncements] = useState<any[]>([])
 
   useEffect(() => {
     const supabase = createClient()
@@ -43,13 +44,14 @@ export default function DashboardPage() {
 
       const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
 
-      const [profileRes, actsRes, goalsRes, recentRes, weeklyTopRes] = await Promise.all([
+      const [profileRes, actsRes, goalsRes, recentRes, weeklyTopRes, announcementsRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),
         supabase.from('activities').select('status').eq('user_id', user.id),
         supabase.from('goals').select('title,status,target_metric,current_metric,goal_type,deadline').eq('user_id', user.id).eq('status','active').limit(2),
         supabase.from('activities').select('id,title,activity_type,status,submitted_at').eq('user_id', user.id)
           .order('submitted_at', { ascending: false }).limit(5),
         fetch('/api/leaderboard/live?period=weekly').then(r => r.json()).catch(() => ({ entries: [] })),
+        fetch('/api/announcements').then(r => r.json()).catch(() => []),
       ])
 
       const acts     = actsRes.data ?? []
@@ -59,6 +61,8 @@ export default function DashboardPage() {
 
       const top3  = (weeklyTopRes.entries ?? []).slice(0, 3)
       const myPos = (weeklyTopRes.entries ?? []).findIndex((e: any) => e.id === user.id) + 1
+
+      if (Array.isArray(announcementsRes)) setAnnouncements(announcementsRes)
 
       setData({
         profile: profileRes.data,
@@ -137,6 +141,31 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Announcements */}
+      {announcements.length > 0 && (
+        <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:10 }}>
+          {announcements.map((a: any) => (
+            <div key={a.id} style={{
+              background: a.is_pinned ? S.goldBg : S.s1,
+              border: `1px solid ${a.is_pinned ? S.goldBd : S.bd}`,
+              borderLeft: `4px solid ${a.is_pinned ? S.gold : S.blue}`,
+              borderRadius: 10, padding:'14px 18px',
+              boxShadow:'0 1px 3px rgba(0,0,0,0.05)',
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
+                {a.is_pinned && <span style={{ fontSize:12 }}>📌</span>}
+                <span style={{ fontSize:14, fontWeight:700, color:S.tx }}>{a.title}</span>
+                <span style={{ marginLeft:'auto', fontSize:11, color:S.mu }}>{timeAgo(a.created_at)}</span>
+              </div>
+              <p style={{ margin:0, fontSize:13, color:S.tx2, lineHeight:1.6, whiteSpace:'pre-wrap' }}>{a.body}</p>
+              {a.author?.full_name && (
+                <div style={{ fontSize:11, color:S.mu, marginTop:6 }}>— {a.author.full_name}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Main grid */}
       <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'1fr 290px', gap:18 }}>

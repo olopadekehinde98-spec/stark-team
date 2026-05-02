@@ -15,10 +15,10 @@ export async function GET(_req: NextRequest) {
   const { data, error } = await supabase
     .from('announcements')
     .select('id,title,body,created_at,is_pinned,author:created_by(full_name)')
-    .eq('is_pinned', true)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .order('is_pinned', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(10)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json(data)
