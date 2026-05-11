@@ -193,6 +193,78 @@ export default function HelpPage() {
         ))}
       </Section>
 
+      {/* Goal time rules */}
+      <Section title="Daily Goal Rules — When to Set & Submit" icon="🎯">
+        <Alert type="warn">
+          Goals must be written <strong>between 5:00 AM and 12:00 PM Nigeria time (WAT)</strong> every day.
+          Once it is 12:00 PM, the Create Goal button locks until the next morning at 5:00 AM.
+        </Alert>
+        <div style={{ marginTop:16 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:S.mu, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:10 }}>How it works</div>
+          {[
+            { icon:'⏰', title:'5:00 AM — Window opens', desc:'You can create your goal for the day starting from 5:00 AM Nigeria time.' },
+            { icon:'✍️', title:'Write your goal clearly', desc:'Your goal title should describe exactly what you plan to achieve today. Be specific.' },
+            { icon:'🔒', title:'12:00 PM — Window closes', desc:'At noon (12:00 PM WAT) the window closes. You cannot create a new goal until the next morning.' },
+            { icon:'📋', title:'Submit via Activities', desc:'When you complete the goal, submit it through the Activities page. Link the activity to your written goal — it will be automatically marked as complete.' },
+          ].map(item => (
+            <div key={item.title} style={{ display:'flex', gap:12, padding:'12px 0', borderBottom:`1px solid ${S.bd}` }}>
+              <span style={{ fontSize:20, flexShrink:0 }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize:13, fontWeight:700, color:S.tx, marginBottom:3 }}>{item.title}</div>
+                <div style={{ fontSize:13, color:S.tx2, lineHeight:1.6 }}>{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Alert type="blue">
+          <strong>Daily Reminder:</strong> Between 5:00 AM and 12:00 PM, a gold banner appears at the top of every page reminding you to set your goal.
+          This banner cannot be dismissed — it disappears automatically at noon. It is silent (no sound).
+        </Alert>
+      </Section>
+
+      {/* Activity & Goal link */}
+      <Section title="Activities Must Match Your Written Goals" icon="📋">
+        <p style={{ fontSize:13, color:S.tx2, lineHeight:1.8, marginTop:14 }}>
+          When you submit an activity, you should <strong style={{ color:S.tx }}>link it to one of your active goals</strong>.
+          This is how your performance is tracked correctly.
+        </p>
+        {[
+          { q: 'Why must I link an activity to a goal?', a: 'Your goal is your commitment for the day. Your activity is the proof that you completed it. Linking them closes the loop — goal written → work done → goal marked complete.' },
+          { q: 'What happens when I submit an activity linked to a goal?', a: 'The goal is automatically marked as Completed. You do not need to manually close the goal.' },
+          { q: 'Can I submit an activity without a goal?', a: 'Yes, but it is strongly encouraged to always have a written goal first. Goals set the intention; activities prove the work.' },
+        ].map((item, i) => (
+          <div key={i} style={{ marginTop:16, paddingTop: i > 0 ? 16 : 0, borderTop: i > 0 ? `1px solid ${S.bd}` : 'none' }}>
+            <div style={{ fontSize:13, fontWeight:700, color:S.tx, marginBottom:6 }}>❓ {item.q}</div>
+            <div style={{ fontSize:13, color:S.tx2, lineHeight:1.7 }}>→ {item.a}</div>
+          </div>
+        ))}
+      </Section>
+
+      {/* Admin override */}
+      <Section title="Admin Override (Admins Only)" icon="🛡️">
+        <p style={{ fontSize:13, color:S.tx2, lineHeight:1.8, marginTop:14 }}>
+          Admins have access to the <strong style={{ color:S.tx }}>Override Panel</strong> under the Admin menu.
+          This allows the admin to correct any goal or activity record — including their own.
+        </p>
+        <div style={{ marginTop:10 }}>
+          {[
+            { action:'Reject a Goal',      desc:'Marks any accepted/active goal as Rejected. Use when a goal was approved by mistake or does not meet standards.' },
+            { action:'Reset to Pending',   desc:'Returns a goal or activity back to Pending status so it can be reviewed or re-submitted.' },
+            { action:'Mark Goal Complete', desc:'Force-completes a goal even if no activity has been submitted against it yet.' },
+            { action:'Reject an Activity', desc:'Rejects a pending or verified activity submitted by any leader, including the admin\'s own submissions.' },
+          ].map((item, i) => (
+            <div key={i} style={{ display:'flex', gap:12, padding:'10px 0', borderBottom:`1px solid ${S.bd}` }}>
+              <span style={{ fontSize:12, fontWeight:700, color:S.navy, background:S.s3, border:`1px solid ${S.bd}`, padding:'2px 10px', borderRadius:20, height:'fit-content', whiteSpace:'nowrap' }}>{item.action}</span>
+              <span style={{ fontSize:13, color:S.tx2, lineHeight:1.6 }}>{item.desc}</span>
+            </div>
+          ))}
+        </div>
+        <Alert type="err">
+          Override actions are immediate and permanent. They do not notify the affected user automatically.
+          Admins should use override only when there is a genuine reason.
+        </Alert>
+      </Section>
+
       {/* Navigation guide */}
       <Section title="Quick Navigation Guide" icon="🗺️">
         <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:14 }}>

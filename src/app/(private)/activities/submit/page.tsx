@@ -118,8 +118,14 @@ export default function SubmitActivityPage() {
       proof_url:     finalProofUrl || null,
       proof_type:    finalProofType,
     })
+    if (err) { setLoading(false); setError(err.message); return }
+
+    // Auto-mark the linked goal as completed
+    if (goalId) {
+      await supabase.from('goals').update({ status: 'completed' }).eq('id', goalId).eq('user_id', user.id)
+    }
+
     setLoading(false)
-    if (err) { setError(err.message); return }
     router.push('/activities')
   }
 

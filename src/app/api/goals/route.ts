@@ -13,6 +13,16 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Enforce Nigeria time window: 5 AM – 12 PM WAT (UTC+1)
+  const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
+  if (nigeriaHour < 5 || nigeriaHour >= 12) {
+    return NextResponse.json(
+      { error: 'Goals can only be created between 5:00 AM and 12:00 PM Nigeria time (WAT). Please try again during the next window.' },
+      { status: 403 }
+    )
+  }
+
   const body = await request.json()
   const { title, goal_type, target_metric, target_value, deadline, description, category } = body
   const targetVal = target_metric ?? target_value
