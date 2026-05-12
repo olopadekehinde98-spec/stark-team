@@ -20,7 +20,8 @@ export default function LeaderboardScreen() {
 
   async function load() {
     try {
-      const res  = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL?.replace('.supabase.co', '')}/api/leaderboard/live?period=${period}`)
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'https://stark-team.info'
+      const res  = await fetch(`${apiUrl}/api/leaderboard/live?period=${period}`)
         .catch(() => null)
 
       if (res?.ok) {
