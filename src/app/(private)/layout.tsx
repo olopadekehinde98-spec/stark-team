@@ -108,6 +108,45 @@ function fmtRank(rank?: string) {
   return rank ? (map[rank] ?? rank.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())) : 'Member'
 }
 
+/** Register service worker & subscribe to web push — called once after login */
+async function registerPushSubscription() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!vapidKey) return
+
+    // Request permission (silent if already granted/denied)
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') return
+
+    const reg = await navigator.serviceWorker.ready
+    // Check if already subscribed
+    const existing = await reg.pushManager.getSubscription()
+    const sub = existing ?? await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    })
+
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } }),
+    })
+  } catch { /* ignore — push is best-effort */ }
+}
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = atob(base64)
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
+  if (!buffer) return ''
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+}
+
 // ── component ──────────────────────────────────────────────────────────────
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
   const [profile,    setProfile]    = useState<any>(null)
@@ -128,6 +167,8 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
       ])
       setProfile(profRes.data)
       setNotif(notifRes.count ?? 0)
+      // Register push subscription after login (fire-and-forget)
+      registerPushSubscription()
     })()
   }, [router])
 

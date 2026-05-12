@@ -17,6 +17,7 @@ const ADMIN_LINKS = [
   { href: '/admin/announcements',       label: 'Announcements',     icon: '📢' },
   { href: '/admin/alerts',              label: 'Alerts',            icon: '🔴' },
   { href: '/admin/override',            label: 'Override',          icon: '🛡️' },
+  { href: '/admin/goal-history',        label: 'Goal History',      icon: '📅' },
   { href: '/admin/templates',           label: 'Templates',         icon: '📝' },
   { href: '/admin/ranks',               label: 'Ranks',             icon: '🏅' },
   { href: '/admin/leaderboard-settings',label: 'Leaderboard',       icon: '🏆' },
