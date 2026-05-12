@@ -70,34 +70,24 @@ export default function GoalDetailPage() {
       if (!user) { router.push('/login'); return }
       setMyId(user.id)
 
-      const [{ data: prof }, { data: g }] = await Promise.all([
-        supabase.from('users').select('role,rank').eq('id', user.id).single(),
-        supabase.from('goals').select('*').eq('id', id).single(),
-      ])
+      // Get current user's role
+      const { data: prof } = await supabase.from('users').select('role,rank').eq('id', user.id).single()
+      const role = prof?.role ?? ''
+      setMyRole(role)
 
-      if (!g) { router.push('/goals'); return }
+      // Fetch goal + evidence via API (uses admin client — bypasses RLS for leaders/admins)
+      const res = await fetch(`/api/goals/${id}`)
+      if (!res.ok) { router.push('/goals'); return }
+      const { goal: g, evidence: acts, owner: ownerData } = await res.json()
 
       // Only allow: owner OR leader/admin
-      const role = prof?.role ?? ''
-      const isOwner = g.user_id === user.id
+      const isOwner  = g.user_id === user.id
       const isLeader = role === 'leader' || role === 'admin'
       if (!isOwner && !isLeader) { router.push('/goals'); return }
 
       setGoal(g)
-      setMyRole(role)
-
-      // Fetch linked activities (evidence) — always, regardless of status
-      const { data: acts } = await supabase
-        .from('activities')
-        .select('id,title,activity_type,status,submitted_at,proof_url,proof_type,description')
-        .eq('goal_id', id)
-        .order('submitted_at', { ascending: false })
       setEvidence(acts ?? [])
-
-      if (!isOwner) {
-        const { data: owner } = await supabase.from('users').select('full_name').eq('id', g.user_id).single()
-        setOwnerName(owner?.full_name ?? 'Unknown')
-      }
+      if (!isOwner && ownerData?.full_name) setOwnerName(ownerData.full_name)
       setLoading(false)
     })()
   }, [id])
