@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 const S = {
   s1:'#FFFFFF', s2:'#F8FAFC', s3:'#EEF2F7', bd:'#E2E8F0',
@@ -28,6 +29,7 @@ export default function SubmitActivityPage() {
   const [step,        setStep]        = useState(0)
   const [templates,   setTemplates]   = useState<any[]>([])
   const [goals,       setGoals]       = useState<any[]>([])
+  const [goalsLoaded, setGoalsLoaded] = useState(false)
   const [title,       setTitle]       = useState('')
   const [actType,     setActType]     = useState('')
   const [templateId,  setTemplateId]  = useState('')
@@ -45,22 +47,24 @@ export default function SubmitActivityPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('activity_templates').select('id,name,proof_required').eq('is_active', true).then(({ data }) => setTemplates(data ?? []))
+    supabase.from('activity_templates').select('id,name,proof_required').eq('is_active', true)
+      .then(({ data }) => setTemplates(data ?? []))
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
       const { data } = await supabase.from('goals').select('id,title').eq('user_id', user.id).eq('status','active')
       setGoals(data ?? [])
+      setGoalsLoaded(true)
     })
   }, [])
 
   const selectedTemplate = templates.find(t => t.id === templateId)
   const proofRequired    = selectedTemplate?.proof_required ?? false
-
-  const effectiveProofUrl = proofMode === 'link' ? proofUrl : proofPreview
   const hasProof = proofMode === 'link' ? proofUrl.trim().length > 0 : !!proofFile
 
   function canNext() {
     if (step === 0) return title.trim().length > 0 && actType.trim().length > 0 && !!actDate
+    // Step 1: goal is REQUIRED
+    if (step === 1) return !!goalId
     if (step === 2) return !proofRequired || hasProof
     return true
   }
@@ -71,19 +75,19 @@ export default function SubmitActivityPage() {
     if (file.size > 10 * 1024 * 1024) { setError('File must be under 10MB'); return }
     setProofFile(file)
     setProofType('image')
-    // Show a local preview URL immediately
     setProofPreview(URL.createObjectURL(file))
     setError('')
   }
 
   async function handleSubmit() {
     setError('')
+    if (!goalId) { setError('You must link this activity to one of your daily goals.'); return }
     if (proofRequired && !hasProof) { setError('Proof is required for this activity type'); return }
 
-    let finalProofUrl = proofUrl
+    let finalProofUrl  = proofUrl
     let finalProofType = proofUrl ? proofType : 'none'
 
-    // Upload file via server route (bypasses Supabase Storage RLS)
+    // Upload proof image first if needed
     if (proofMode === 'upload' && proofFile) {
       setUploading(true)
       try {
@@ -103,29 +107,24 @@ export default function SubmitActivityPage() {
     }
 
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Not authenticated'); setLoading(false); return }
-
-    const { error: err } = await supabase.from('activities').insert({
-      user_id:       user.id,
-      title,
-      description:   description || null,
-      activity_type: actType || selectedTemplate?.name || title,
-      template_id:   templateId || null,
-      goal_id:       goalId || null,
-      activity_date: actDate,
-      proof_url:     finalProofUrl || null,
-      proof_type:    finalProofType,
+    // Submit via server API — goal completion handled server-side (bypasses RLS)
+    const res = await fetch('/api/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description:   description || null,
+        activity_type: actType || selectedTemplate?.name || title,
+        template_id:   templateId || null,
+        goal_id:       goalId,
+        activity_date: actDate,
+        proof_url:     finalProofUrl || null,
+        proof_type:    finalProofType,
+      }),
     })
-    if (err) { setLoading(false); setError(err.message); return }
-
-    // Auto-mark the linked goal as completed
-    if (goalId) {
-      await supabase.from('goals').update({ status: 'completed' }).eq('id', goalId).eq('user_id', user.id)
-    }
-
+    const data = await res.json()
     setLoading(false)
+    if (!res.ok) { setError(data.error ?? 'Failed to submit activity'); return }
     router.push('/activities')
   }
 
@@ -195,13 +194,11 @@ export default function SubmitActivityPage() {
                 ))}
               </select>
             </div>
-
             {proofRequired && (
               <div style={{ background:S.warnBg, border:`1px solid ${S.warnBd}`, borderRadius:8, padding:'10px 14px', fontSize:12, color:S.warn }}>
                 ⚠ Proof upload is required for this activity type
               </div>
             )}
-
             <div>
               {label('Title', true)}
               <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Sales call with Mr Ade" style={inp} />
@@ -223,23 +220,53 @@ export default function SubmitActivityPage() {
           </div>
         )}
 
-        {/* STEP 1: Link Goal */}
+        {/* STEP 1: Link Goal — REQUIRED */}
         {step === 1 && (
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-            <p style={{ fontSize:13, color:S.tx2, lineHeight:1.7, margin:0 }}>
-              Optionally link this activity to one of your active goals to track progress automatically.
-            </p>
-            {goals.length === 0 ? (
-              <div style={{ padding:'20px', textAlign:'center', background:S.s2, borderRadius:8, color:S.mu, fontSize:13 }}>
-                You have no active goals — you can skip this step.
+            {/* Required notice */}
+            <div style={{ background:S.warnBg, border:`1px solid ${S.warnBd}`, borderRadius:8, padding:'12px 14px', fontSize:13, color:S.warn, display:'flex', gap:8, alignItems:'flex-start' }}>
+              <span>⚠️</span>
+              <div>
+                <strong>Goal is required.</strong> You must link this activity to your written daily goal.
+                Activities submitted without a goal will be blocked. This ensures accountability and tracks your daily commitments.
+              </div>
+            </div>
+
+            {!goalsLoaded ? (
+              <div style={{ padding:20, textAlign:'center', color:S.mu, fontSize:13 }}>Loading goals…</div>
+            ) : goals.length === 0 ? (
+              /* No active goals — block with explanation */
+              <div style={{ background:S.errBg, border:`1px solid ${S.errBd}`, borderRadius:10, padding:20, textAlign:'center' }}>
+                <div style={{ fontSize:24, marginBottom:10 }}>🎯</div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.err, marginBottom:8 }}>No Active Goals Found</div>
+                <div style={{ fontSize:13, color:S.err, lineHeight:1.7, marginBottom:16 }}>
+                  You don't have any approved active goals today. You <strong>must have an active goal</strong> before you can submit an activity.
+                  <br /><br />
+                  Goals must be written between <strong>5:00 AM – 12:00 PM</strong> Nigeria time and approved by your leader.
+                </div>
+                <Link href="/goals/create" style={{
+                  display:'inline-block', padding:'9px 20px', borderRadius:8, background:S.navy,
+                  color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none',
+                }}>
+                  🎯 Create a Goal Now
+                </Link>
               </div>
             ) : (
               <div>
-                {label('Link to goal')}
-                <select value={goalId} onChange={e => setGoalId(e.target.value)} style={inp}>
-                  <option value="">No goal — skip</option>
+                {label('Select your goal', true)}
+                <select value={goalId} onChange={e => setGoalId(e.target.value)}
+                  style={{ ...inp, border: goalId ? `1px solid ${S.ok}` : `2px solid ${S.err}` }}>
+                  <option value="">— Select the goal this activity fulfils —</option>
                   {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
                 </select>
+                {!goalId && (
+                  <div style={{ fontSize:12, color:S.err, marginTop:6 }}>⚠ You must select a goal to proceed.</div>
+                )}
+                {goalId && (
+                  <div style={{ marginTop:10, padding:'10px 14px', background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:8, fontSize:12, color:S.ok }}>
+                    ✅ Goal linked. Submitting this activity will mark your goal as <strong>completed</strong>.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -251,8 +278,6 @@ export default function SubmitActivityPage() {
             <p style={{ fontSize:13, color:S.tx2, lineHeight:1.7, margin:0 }}>
               Attach proof of your activity — upload an image or paste a link.
             </p>
-
-            {/* Mode toggle */}
             <div style={{ display:'flex', gap:0, background:S.s3, borderRadius:8, padding:3 }}>
               {(['upload', 'link'] as const).map(m => (
                 <button key={m} type="button" onClick={() => { setProofMode(m); setError('') }}
@@ -266,7 +291,6 @@ export default function SubmitActivityPage() {
                 </button>
               ))}
             </div>
-
             {proofMode === 'upload' ? (
               <div>
                 {label('Image File', proofRequired)}
@@ -335,7 +359,10 @@ export default function SubmitActivityPage() {
                 <span style={{ fontSize:13, color:S.tx, lineHeight:1.5 }}>{row.value}</span>
               </div>
             ))}
-            <div style={{ marginTop:16, padding:'12px 14px', background:S.blueBg, border:`1px solid ${S.blueBd}`, borderRadius:8, fontSize:12, color:S.blue }}>
+            <div style={{ marginTop:16, padding:'12px 14px', background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:8, fontSize:12, color:S.ok }}>
+              ✅ Submitting will mark your goal <strong>"{goals.find(g => g.id === goalId)?.title}"</strong> as completed.
+            </div>
+            <div style={{ marginTop:8, padding:'12px 14px', background:S.blueBg, border:`1px solid ${S.blueBd}`, borderRadius:8, fontSize:12, color:S.blue }}>
               ℹ Once submitted, you have <strong>24 hours</strong> to edit this activity before it locks for review.
             </div>
           </div>
@@ -350,8 +377,11 @@ export default function SubmitActivityPage() {
         </button>
 
         {step < STEPS.length - 1 ? (
-          <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
-            style={{ padding:'10px 24px', borderRadius:8, background: canNext() ? S.navy : S.s3, color: canNext() ? '#fff' : S.mu, fontSize:13, fontWeight:700, border:'none', cursor: canNext() ? 'pointer' : 'not-allowed' }}>
+          // On step 1 with no goals, disable Next
+          <button
+            onClick={() => { if (step === 1 && goals.length === 0) return; setStep(s => s + 1) }}
+            disabled={!canNext() || (step === 1 && goals.length === 0)}
+            style={{ padding:'10px 24px', borderRadius:8, background: (canNext() && !(step === 1 && goals.length === 0)) ? S.navy : S.s3, color: (canNext() && !(step === 1 && goals.length === 0)) ? '#fff' : S.mu, fontSize:13, fontWeight:700, border:'none', cursor: (canNext() && !(step === 1 && goals.length === 0)) ? 'pointer' : 'not-allowed' }}>
             Next →
           </button>
         ) : (
