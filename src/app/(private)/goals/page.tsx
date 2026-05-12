@@ -106,9 +106,10 @@ export default async function GoalsPage({
         </div>
       ) : (
         <div className="goals-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-          {list.map(g => {
+          {list.map((g, idx) => {
             const pct   = g.target_metric > 0 ? Math.min(100, Math.round(((g.current_metric ?? 0) / g.target_metric) * 100)) : 0
             const color = TYPE_COLORS[g.goal_type] ?? S.mu
+            const shortId = g.id?.slice(0, 8).toUpperCase() ?? ''
             return (
               <Link key={g.id} href={`/goals/${g.id}`} style={{ textDecoration:'none' }}>
                 <div style={{
@@ -116,10 +117,13 @@ export default async function GoalsPage({
                   borderRadius:10, padding:18, boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
                   borderTop:`3px solid ${color}`,
                 }}>
-                  {/* Type tag */}
-                  <div style={{ marginBottom:10 }}>
+                  {/* Type tag + Goal ID */}
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                     <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:color+'18', color }}>
                       {(g.goal_type ?? 'goal').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                    </span>
+                    <span style={{ fontSize:10, fontWeight:700, color:S.mu, fontFamily:"'JetBrains Mono',monospace", background:S.s3, padding:'2px 7px', borderRadius:6, border:`1px solid ${S.bd}` }}>
+                      #{shortId}
                     </span>
                   </div>
 

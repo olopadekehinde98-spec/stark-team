@@ -52,6 +52,7 @@ export default function GoalDetailPage() {
   const router = useRouter()
 
   const [goal,          setGoal]         = useState<any>(null)
+  const [evidence,      setEvidence]     = useState<any[]>([])
   const [myId,          setMyId]         = useState('')
   const [myRole,        setMyRole]       = useState('')
   const [ownerName,     setOwnerName]    = useState('')
@@ -84,6 +85,14 @@ export default function GoalDetailPage() {
 
       setGoal(g)
       setMyRole(role)
+
+      // Fetch linked activities (evidence) — always, regardless of status
+      const { data: acts } = await supabase
+        .from('activities')
+        .select('id,title,activity_type,status,submitted_at,proof_url,proof_type,description')
+        .eq('goal_id', id)
+        .order('submitted_at', { ascending: false })
+      setEvidence(acts ?? [])
 
       if (!isOwner) {
         const { data: owner } = await supabase.from('users').select('full_name').eq('id', g.user_id).single()
@@ -168,9 +177,12 @@ export default function GoalDetailPage() {
         {/* Header */}
         <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16, flexWrap:'wrap' }}>
           <div>
-            <div style={{ marginBottom:6 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
               <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:color+'18', color }}>
                 {(goal.goal_type ?? 'goal').replace(/\b\w/g,(c:string)=>c.toUpperCase())}
+              </span>
+              <span style={{ fontSize:10, fontWeight:700, color:S.mu, fontFamily:"'JetBrains Mono',monospace", background:S.s3, padding:'2px 7px', borderRadius:6, border:`1px solid ${S.bd}` }}>
+                #{goal.id?.slice(0,8).toUpperCase()}
               </span>
             </div>
             <h1 style={{ fontSize:20, fontWeight:800, color:S.tx, letterSpacing:'-0.02em', margin:0, lineHeight:1.3 }}>{goal.title}</h1>
@@ -224,6 +236,67 @@ export default function GoalDetailPage() {
             <div style={{ fontSize:13, color:S.err }}>{goal.rejection_reason}</div>
           </div>
         )}
+
+        {/* ── Evidence / Linked Activities ────────────────────── */}
+        <div style={{ marginTop:20, borderTop:`1px solid ${S.bd}`, paddingTop:20 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:S.mu, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12 }}>
+            📎 Evidence ({evidence.length} activit{evidence.length===1?'y':'ies'} linked)
+          </div>
+          {evidence.length === 0 ? (
+            <div style={{ background:S.s2, borderRadius:8, padding:'16px', fontSize:13, color:S.mu, textAlign:'center' }}>
+              No activities linked to this goal yet.
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {evidence.map(act => {
+                const actStatus = act.status === 'verified' ? { bg:S.okBg, c:S.ok, bd:S.okBd, icon:'✅' }
+                  : act.status === 'rejected' ? { bg:S.errBg, c:S.err, bd:S.errBd, icon:'✕' }
+                  : { bg:S.warnBg, c:S.warn, bd:S.warnBd, icon:'⏳' }
+                return (
+                  <div key={act.id} style={{ background:S.s2, border:`1px solid ${S.bd}`, borderRadius:10, padding:'14px 16px' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10, flexWrap:'wrap', marginBottom:8 }}>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:700, color:S.tx, marginBottom:3 }}>{act.title}</div>
+                        <div style={{ fontSize:11, color:S.tx2 }}>{act.activity_type} · {act.submitted_at ? new Date(act.submitted_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:700, padding:'3px 9px', borderRadius:20, background:actStatus.bg, color:actStatus.c, border:`1px solid ${actStatus.bd}`, flexShrink:0 }}>
+                        {actStatus.icon} {act.status?.replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}
+                      </span>
+                    </div>
+                    {act.description && (
+                      <div style={{ fontSize:12, color:S.tx2, marginBottom:8, lineHeight:1.55 }}>{act.description}</div>
+                    )}
+                    {/* Proof */}
+                    {act.proof_url && (
+                      <div style={{ marginTop:6 }}>
+                        {act.proof_type === 'image' ? (
+                          <div>
+                            <div style={{ fontSize:11, fontWeight:600, color:S.mu, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.04em' }}>📸 Proof Image</div>
+                            <img
+                              src={act.proof_url}
+                              alt="Proof"
+                              style={{ maxWidth:'100%', maxHeight:260, borderRadius:8, border:`1px solid ${S.bd}`, objectFit:'contain', display:'block' }}
+                              onError={(e: any) => { e.target.style.display = 'none' }}
+                            />
+                            <a href={act.proof_url} target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize:12, color:S.blue, display:'inline-block', marginTop:6, textDecoration:'none', fontWeight:600 }}>
+                              🔗 Open full image
+                            </a>
+                          </div>
+                        ) : (
+                          <a href={act.proof_url} target="_blank" rel="noopener noreferrer"
+                            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, background:S.blueBg, border:`1px solid ${S.blueBd}`, color:S.blue, fontSize:12, fontWeight:600, textDecoration:'none' }}>
+                            🔗 {act.proof_type === 'video_link' ? 'View Video Proof' : act.proof_type === 'document' ? 'View Document' : 'View Proof'}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Approval panel (leader / admin only, pending goals) */}

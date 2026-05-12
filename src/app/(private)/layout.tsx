@@ -108,19 +108,14 @@ function fmtRank(rank?: string) {
   return rank ? (map[rank] ?? rank.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())) : 'Member'
 }
 
-/** Register service worker & subscribe to web push — called once after login */
-async function registerPushSubscription() {
+/** Subscribe to push after permission is granted */
+async function subscribeToPush() {
   try {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-    if (!vapidKey) return
-
-    // Request permission (silent if already granted/denied)
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') return
+    if (!vapidKey) return false
 
     const reg = await navigator.serviceWorker.ready
-    // Check if already subscribed
     const existing = await reg.pushManager.getSubscription()
     const sub = existing ?? await reg.pushManager.subscribe({
       userVisibleOnly: true,
@@ -130,8 +125,102 @@ async function registerPushSubscription() {
     await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } }),
+      body: JSON.stringify({
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: arrayBufferToBase64(sub.getKey('p256dh')),
+          auth:   arrayBufferToBase64(sub.getKey('auth')),
+        },
+      }),
     })
+    return true
+  } catch { return false }
+}
+
+/** Visible push-permission banner — shown until user enables or explicitly dismisses */
+function PushPermissionBanner() {
+  const [show,   setShow]   = useState(false)
+  const [status, setStatus] = useState<'idle'|'asking'|'done'>('idle')
+
+  useEffect(() => {
+    // Only show if push is supported and permission not yet granted/denied
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+    if (Notification.permission === 'default') {
+      // Delay slightly so it doesn't appear before the page loads
+      const t = setTimeout(() => setShow(true), 2500)
+      return () => clearTimeout(t)
+    }
+    // If already granted but not subscribed, silently subscribe
+    if (Notification.permission === 'granted') {
+      subscribeToPush().catch(() => {})
+    }
+  }, [])
+
+  if (!show) return null
+
+  async function handleEnable() {
+    setStatus('asking')
+    const permission = await Notification.requestPermission()
+    if (permission === 'granted') {
+      await subscribeToPush()
+      setStatus('done')
+      setTimeout(() => setShow(false), 1800)
+    } else {
+      setShow(false)
+    }
+  }
+
+  return (
+    <div style={{
+      background: '#0F1C2E',
+      borderBottom: '2px solid #D4A017',
+      padding: '12px 16px',
+      display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 20, flexShrink: 0 }}>🔔</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+          Enable Notifications
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>
+          Get daily goal reminders at 5AM and instant alerts when activities are verified.
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        {status === 'done' ? (
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80' }}>✓ Enabled!</span>
+        ) : (
+          <>
+            <button onClick={handleEnable} disabled={status === 'asking'} style={{
+              padding: '7px 14px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+              background: '#D4A017', color: '#0F1C2E', border: 'none',
+              cursor: status === 'asking' ? 'wait' : 'pointer', whiteSpace: 'nowrap',
+            }}>
+              {status === 'asking' ? '…' : '🔔 Enable'}
+            </button>
+            <button onClick={() => setShow(false)} style={{
+              padding: '7px 10px', borderRadius: 7, fontSize: 12,
+              background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)',
+              border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer',
+            }}>✕</button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Register service worker & subscribe to web push — called once after login */
+async function registerPushSubscription() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!vapidKey) return
+
+    // Only auto-subscribe if permission already granted (don't auto-prompt)
+    if (Notification.permission !== 'granted') return
+
+    await subscribeToPush()
   } catch { /* ignore — push is best-effort */ }
 }
 
@@ -335,6 +424,11 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
             }}>⏻</button>
           </div>
         </nav>
+
+        {/* ════════════════════════════════════════════════════════════
+            PUSH PERMISSION BANNER (shown once if not yet enabled)
+        ════════════════════════════════════════════════════════════ */}
+        <PushPermissionBanner />
 
         {/* ════════════════════════════════════════════════════════════
             GOAL REMINDER BANNER (5AM–12PM Nigeria time, undismissable)
