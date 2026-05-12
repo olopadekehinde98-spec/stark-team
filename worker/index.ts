@@ -1,46 +1,39 @@
+// @ts-nocheck
 /* eslint-disable no-restricted-globals */
 
-self.addEventListener('push', (event: Event) => {
-  const pushEvent = event as PushEvent
-  if (!pushEvent.data) return
+self.addEventListener('push', (event: any) => {
+  if (!event.data) return
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload: any
-  try { payload = pushEvent.data.json() } catch { payload = { body: pushEvent.data.text() } }
+  try { payload = event.data.json() } catch { payload = { body: event.data.text() } }
 
-  const title: string = payload.title ?? 'Stark Team'
-  const options: NotificationOptions = {
-    body:     payload.body  ?? '',
-    icon:     payload.icon  ?? '/icons/icon-192.png',
+  const title   = payload.title || 'Stark Team'
+  const options = {
+    body:     payload.body  || '',
+    icon:     payload.icon  || '/icons/icon-192.png',
     badge:    '/icons/icon-96.png',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data:     { url: payload.url ?? '/dashboard' } as any,
+    data:     { url: payload.url || '/dashboard' },
     vibrate:  [200, 100, 200],
-    tag:      payload.tag ?? 'stark-notification',
+    tag:      payload.tag   || 'stark-notification',
     renotify: true,
+    silent:   true,        // no sound — visual pop-up only
   }
 
-  // @ts-ignore — self is ServiceWorkerGlobalScope in this context
-  pushEvent.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil(self.registration.showNotification(title, options))
 })
 
-self.addEventListener('notificationclick', (event: Event) => {
-  const notifEvent = event as NotificationEvent
-  notifEvent.notification.close()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const url: string = (notifEvent.notification.data as any)?.url ?? '/dashboard'
+self.addEventListener('notificationclick', (event: any) => {
+  event.notification.close()
+  const url = event.notification.data?.url || '/dashboard'
 
-  notifEvent.waitUntil(
-    // @ts-ignore
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list: readonly Client[]) => {
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list: any[]) => {
       for (const client of list) {
-        // @ts-ignore
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          ;(client as WindowClient).navigate(url)
+        if (client.url.indexOf(self.location.origin) !== -1 && 'focus' in client) {
+          client.navigate(url)
           return client.focus()
         }
       }
-      // @ts-ignore
       return self.clients.openWindow(url)
     })
   )
