@@ -95,35 +95,21 @@ export default function ProfilePage() {
     if (!file) return
     if (file.size > 5 * 1024 * 1024) { setMsg('Image must be under 5MB'); return }
     setUploading(true); setMsg('')
-    // Ensure the avatars bucket exists before uploading
-    await fetch('/api/storage/ensure-buckets', { method: 'POST' }).catch(() => {})
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setUploading(false); return }
-    const ext  = file.name.split('.').pop()
-    const path = `${user.id}/avatar.${ext}`
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
-    if (upErr) {
-      setMsg('Upload failed: ' + upErr.message)
-      setUploading(false)
-      return
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/profile/upload-avatar', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) {
+        setMsg('Upload failed: ' + (data.error ?? 'Unknown error'))
+        setUploading(false)
+        return
+      }
+      setProfile((p: any) => ({ ...p, avatar_url: data.avatar_url }))
+      setMsg('✓ Photo updated!')
+    } catch {
+      setMsg('Upload failed: network error')
     }
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
-    const avatar_url = urlData.publicUrl + '?t=' + Date.now()
-    // Use server route to avoid DB trigger constraint issues
-    const updateRes = await fetch('/api/profile/avatar', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avatar_url }),
-    })
-    if (!updateRes.ok) {
-      const e = await updateRes.json().catch(() => ({}))
-      setMsg('Photo uploaded but profile update failed: ' + (e.error ?? 'unknown error'))
-      setUploading(false)
-      return
-    }
-    setProfile((p: any) => ({ ...p, avatar_url }))
-    setMsg('Photo updated!')
     setUploading(false)
   }
 

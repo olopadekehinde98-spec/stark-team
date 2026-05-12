@@ -40,7 +40,7 @@ type PendingGoal = {
   id: string
   title: string
   goal_type: string
-  target_value: number
+  target_metric: number
   deadline?: string
   description?: string
   created_at: string
@@ -111,7 +111,7 @@ function GoalCard({
 
           {/* Meta */}
           <div style={{ display:'flex', gap:12, fontSize:11, color:S.mu, marginBottom:12, flexWrap:'wrap' }}>
-            <span>Target: <strong style={{ color:S.tx }}>{goal.target_value}</strong></span>
+            <span>Target: <strong style={{ color:S.tx }}>{goal.target_metric}</strong></span>
             {dl && <span style={{ color:dl.color, fontWeight:600 }}>{dl.text}</span>}
             <span>Submitted {Math.round((Date.now() - new Date(goal.created_at).getTime()) / 3600000)}h ago</span>
           </div>

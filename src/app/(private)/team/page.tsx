@@ -37,8 +37,9 @@ type Member = {
   invited_by?: string
 }
 
-function initials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+function initials(name: string | null | undefined) {
+  if (!name || !name.trim()) return '??'
+  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
 function palette(name: string) {

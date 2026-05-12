@@ -36,7 +36,7 @@ export default function SubmitActivityPage() {
   const [goalId,      setGoalId]      = useState('')
   const [proofUrl,     setProofUrl]    = useState('')
   const [proofType,    setProofType]   = useState('image')
-  const [proofMode,    setProofMode]   = useState<'link' | 'upload'>('link')
+  const [proofMode,    setProofMode]   = useState<'link' | 'upload'>('upload')
   const [proofFile,    setProofFile]   = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState('')
   const [uploading,    setUploading]   = useState(false)
@@ -83,23 +83,23 @@ export default function SubmitActivityPage() {
     let finalProofUrl = proofUrl
     let finalProofType = proofUrl ? proofType : 'none'
 
-    // Upload file if user chose file upload
+    // Upload file via server route (bypasses Supabase Storage RLS)
     if (proofMode === 'upload' && proofFile) {
       setUploading(true)
-      // Ensure bucket exists
-      await fetch('/api/storage/ensure-buckets', { method: 'POST' }).catch(() => {})
-      const supabase = createClient()
-      const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) { setError('Not authenticated'); setUploading(false); return }
-      const ext  = proofFile.name.split('.').pop()
-      const path = `${u.id}/${Date.now()}.${ext}`
-      const { error: upErr, data: upData } = await supabase.storage
-        .from('activity-proofs').upload(path, proofFile, { upsert: false, contentType: proofFile.type })
+      try {
+        const fd = new FormData()
+        fd.append('file', proofFile)
+        const res  = await fetch('/api/activities/upload-proof', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (!res.ok) { setError('Upload failed: ' + (data.error ?? 'Unknown error')); setUploading(false); return }
+        finalProofUrl  = data.url
+        finalProofType = 'image'
+      } catch {
+        setError('Upload failed: network error')
+        setUploading(false)
+        return
+      }
       setUploading(false)
-      if (upErr) { setError('Upload failed: ' + upErr.message); return }
-      const { data: urlData } = supabase.storage.from('activity-proofs').getPublicUrl(path)
-      finalProofUrl  = urlData.publicUrl
-      finalProofType = 'image'
     }
 
     setLoading(true)
@@ -118,8 +118,14 @@ export default function SubmitActivityPage() {
       proof_url:     finalProofUrl || null,
       proof_type:    finalProofType,
     })
+    if (err) { setLoading(false); setError(err.message); return }
+
+    // Auto-mark the linked goal as completed
+    if (goalId) {
+      await supabase.from('goals').update({ status: 'completed' }).eq('id', goalId).eq('user_id', user.id)
+    }
+
     setLoading(false)
-    if (err) { setError(err.message); return }
     router.push('/activities')
   }
 

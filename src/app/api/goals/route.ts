@@ -13,11 +13,22 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Enforce Nigeria time window: 5 AM – 12 PM WAT (UTC+1)
+  const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
+  if (nigeriaHour < 5 || nigeriaHour >= 12) {
+    return NextResponse.json(
+      { error: 'Goals can only be created between 5:00 AM and 12:00 PM Nigeria time (WAT). Please try again during the next window.' },
+      { status: 403 }
+    )
+  }
+
   const body = await request.json()
-  const { title, goal_type, target_metric, deadline, description, category } = body
-  if (!title || !goal_type || !target_metric || !deadline) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  const { title, goal_type, target_metric, target_value, deadline, description, category } = body
+  const targetVal = target_metric ?? target_value
+  if (!title || !goal_type || !targetVal || !deadline) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   const { data, error } = await supabase.from('goals').insert({
-    user_id: user.id, title, goal_type, target_metric: Number(target_metric), deadline,
+    user_id: user.id, title, goal_type, target_metric: Number(targetVal), deadline,
     description: description||null, category: category||null, status: 'pending_approval',
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

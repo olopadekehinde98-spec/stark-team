@@ -4,6 +4,55 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+/** Returns current hour in Nigeria (WAT = UTC+1) */
+function getNigeriaHour(): number {
+  const now = new Date()
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000
+  return new Date(utcMs + 60 * 60 * 1000).getHours()
+}
+
+/** Silent, undismissable goal reminder banner shown 5AM–12PM Nigeria time */
+function GoalReminderBanner() {
+  const [hour, setHour] = useState<number | null>(null)
+
+  useEffect(() => {
+    setHour(getNigeriaHour())
+    const t = setInterval(() => setHour(getNigeriaHour()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  // Only show between 5AM and 12PM Nigeria time
+  if (hour === null || hour < 5 || hour >= 12) return null
+
+  return (
+    <div style={{
+      background: 'linear-gradient(90deg, #1a2e4a 0%, #0F1C2E 100%)',
+      borderBottom: '2px solid #D4A017',
+      padding: '10px 16px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 18, flexShrink: 0 }}>🎯</span>
+      <div style={{ flex: 1 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#D4A017' }}>
+          Daily Goal Reminder
+        </span>
+        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginLeft: 8 }}>
+          Set your goal for today before <strong style={{ color: '#fff' }}>12:00 PM Nigeria time</strong>.
+          After noon the window closes until tomorrow at 5:00 AM.
+        </span>
+      </div>
+      <Link href="/goals/create" style={{
+        padding: '6px 14px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+        background: '#D4A017', color: '#0F1C2E', textDecoration: 'none', flexShrink: 0,
+        whiteSpace: 'nowrap',
+      }}>
+        Set Goal →
+      </Link>
+    </div>
+  )
+}
+
 // ── brand ──────────────────────────────────────────────────────────────────
 const S = {
   navy: '#0F1C2E', navyL: 'rgba(255,255,255,0.08)',
@@ -64,6 +113,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
   const [profile,    setProfile]    = useState<any>(null)
   const [notifCount, setNotif]      = useState(0)
   const [showMore,   setShowMore]   = useState(false)
+  const [avatarErr,  setAvatarErr]  = useState(false)
   const pathname = usePathname()
   const router   = useRouter()
 
@@ -73,7 +123,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       const [profRes, notifRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role').eq('id', user.id).single(),
+        supabase.from('users').select('full_name,rank,role,avatar_url').eq('id', user.id).single(),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
       ])
       setProfile(profRes.data)
@@ -216,7 +266,14 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
                 width: 30, height: 30, background: S.gold, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 800, color: S.navy, flexShrink: 0,
-              }}>{initials}</div>
+                overflow: 'hidden', position: 'relative',
+              }}>
+                {profile?.avatar_url && !avatarErr ? (
+                  <img src={profile.avatar_url} alt="avatar"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
+                    onError={() => setAvatarErr(true)} />
+                ) : initials}
+              </div>
               <div className="st-desktop-nav" style={{ flexDirection:'column' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
                   {profile?.full_name?.split(' ')[0] ?? '…'}
@@ -237,6 +294,11 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
             }}>⏻</button>
           </div>
         </nav>
+
+        {/* ════════════════════════════════════════════════════════════
+            GOAL REMINDER BANNER (5AM–12PM Nigeria time, undismissable)
+        ════════════════════════════════════════════════════════════ */}
+        <GoalReminderBanner />
 
         {/* ════════════════════════════════════════════════════════════
             PAGE CONTENT

@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { canVerify } from '@/lib/verification/canVerify'
 import { writeAuditLog } from '@/lib/utils/auditLog'
+import { sendPushToUser } from '@/lib/push'
 import { NextResponse } from 'next/server'
 
 export async function POST(
@@ -90,6 +91,14 @@ export async function POST(
     reference_id:   params.activityId,
     reference_type: 'activity',
   })
+
+  // Push notification (fire-and-forget)
+  sendPushToUser(activity.user_id, {
+    title: '✅ Activity Verified',
+    body:  'One of your submitted activities has been verified!',
+    url:   `/activities/${params.activityId}`,
+    tag:   'activity-verified',
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }
