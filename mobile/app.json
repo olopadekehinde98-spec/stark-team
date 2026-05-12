@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Stark Team",
+    "slug": "stark-team",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1C2E"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.starkteam.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Upload activity proof photos",
+        "NSPhotoLibraryUsageDescription": "Upload activity proof photos"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F1C2E"
+      },
+      "package": "com.starkteam.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#D4A017",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
+      "expo-device"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
+  }
+}
