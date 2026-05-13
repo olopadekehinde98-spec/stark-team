@@ -248,15 +248,15 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     const supabase = createClient()
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.replace('/login'); return }
+      const user = session.user
       const [profRes, notifRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,avatar_url').eq('id', user.id).single(),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
       ])
       setProfile(profRes.data)
       setNotif(notifRes.count ?? 0)
-      // Register push subscription after login (fire-and-forget)
       registerPushSubscription()
     })()
   }, [router])

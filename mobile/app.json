@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Stark Team",
+    "slug": "stark-team",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "starkteam",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1C2E"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.starkteam.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F1C2E"
+      },
+      "package": "com.starkteam.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
