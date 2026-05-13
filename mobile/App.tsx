@@ -8,10 +8,9 @@ import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
 import Constants from 'expo-constants'
 
-const APP_URL  = 'https://starkteam.info'
-const API_BASE = 'https://starkteam.info'
-const NAVY     = '#0F1C2E'
-const GOLD     = '#D4A017'
+const APP_URL = 'https://starkteam.info'
+const NAVY    = '#0F1C2E'
+const GOLD    = '#D4A017'
 
 // Show notifications even when app is foregrounded
 Notifications.setNotificationHandler({
@@ -24,7 +23,7 @@ Notifications.setNotificationHandler({
   }),
 })
 
-async function registerForPushNotificationsAsync(): Promise<string | null> {
+async function getExpoPushToken(): Promise<string | null> {
   if (!Device.isDevice) return null
 
   if (Platform.OS === 'android') {
@@ -55,42 +54,66 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
   return token
 }
 
-async function sendTokenToServer(token: string) {
-  try {
-    await fetch(`${API_BASE}/api/push/register-expo-token`, {
-      method:      'POST',
-      credentials: 'include',
-      headers:     { 'Content-Type': 'application/json' },
-      body:        JSON.stringify({
-        token,
-        device: `${Platform.OS} ${Device.modelName ?? ''}`.trim(),
-      }),
-    })
-  } catch { /* best-effort */ }
-}
-
 export default function App() {
-  const webviewRef   = useRef<WebView>(null)
-  const canGoBackRef = useRef(false)         // ref so back handler always has latest value
-  const lastBackTime = useRef(0)             // for double-tap-to-exit
-  const [navUrl,     setNavUrl]    = useState(APP_URL)
-  const [error,      setError]     = useState(false)
-  const [loading,    setLoading]   = useState(true)
+  const webviewRef      = useRef<WebView>(null)
+  const canGoBackRef    = useRef(false)
+  const lastBackTime    = useRef(0)
+  const expoPushToken   = useRef<string | null>(null)  // token obtained from Expo
+  const webviewReady    = useRef(false)                // true once onLoadEnd fires
 
-  // Register push token on mount
+  const [navUrl,  setNavUrl]  = useState(APP_URL)
+  const [error,   setError]   = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // ── Get Expo push token on mount (does NOT call any server — just Expo SDK) ─
   useEffect(() => {
-    let active = true
-    ;(async () => {
-      const token = await registerForPushNotificationsAsync()
-      if (!token || !active) return
-      await sendTokenToServer(token)
-      // Retry after 6s in case auth session wasn't ready
-      setTimeout(() => { if (active) sendTokenToServer(token) }, 6000)
-    })()
-    return () => { active = false }
+    getExpoPushToken().then(token => {
+      if (!token) return
+      expoPushToken.current = token
+      // If WebView already finished loading, inject immediately
+      if (webviewReady.current) injectTokenRegistration(token)
+    })
   }, [])
 
-  // Navigate WebView when a notification is tapped
+  // ── Inject the token into the WebView so it registers with session cookies ──
+  function injectTokenRegistration(token: string) {
+    const device = `${Platform.OS} ${Device.modelName ?? ''}`.trim()
+    // Language: plain JS injected into the page.
+    // Uses the page's own fetch() which has the session cookie — no 401.
+    // Retries up to 10 times with 3-second gaps (handles case where user is
+    // still on the login page when the app first opens).
+    const js = `
+      (function() {
+        var token  = ${JSON.stringify(token)};
+        var device = ${JSON.stringify(device)};
+        var attempts = 0;
+        function register() {
+          attempts++;
+          fetch('/api/push/register-expo-token', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, device: device }),
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if ((data.error === 'Unauthorized' || data.error === 'Forbidden') && attempts < 10) {
+              setTimeout(register, 3000);
+            }
+          })
+          .catch(function() {
+            if (attempts < 10) setTimeout(register, 3000);
+          });
+        }
+        register();
+        true;
+      })();
+      true;
+    `
+    webviewRef.current?.injectJavaScript(js)
+  }
+
+  // ── Navigate WebView when a notification is tapped ─────────────────────────
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(res => {
       const url = res.notification.request.content.data?.url as string | undefined
@@ -103,37 +126,46 @@ export default function App() {
     return () => sub.remove()
   }, [])
 
-  // Android hardware back button — double-tap to exit, otherwise navigate back
+  // ── Android back button — double-tap to exit ────────────────────────────────
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (canGoBackRef.current) {
         webviewRef.current?.goBack()
-        return true   // handled — don't close app
+        return true
       }
-      // Double-tap within 2 seconds to exit
       const now = Date.now()
-      if (now - lastBackTime.current < 2000) {
-        return false  // let Android close the app
-      }
+      if (now - lastBackTime.current < 2000) return false
       lastBackTime.current = now
       ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT)
-      return true     // first tap — stay in app
+      return true
     })
     return () => handler.remove()
   }, [])
 
-  // JS injected so the website knows it's running inside the native app
-  const injectedJS = `
+  // ── JS injected before page content loads ──────────────────────────────────
+  // Tells the website it's running inside the native app, and exposes a hook
+  // so the site can trigger push re-registration if needed.
+  const injectedJSBeforeLoad = `
     (function() {
       window.starkTeamNative = {
         platform: '${Platform.OS}',
         reRegisterPush: function() {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'reregister' }))
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'reregister' }));
         },
       };
       true;
     })();
+    true;
   `
+
+  function handleLoadEnd() {
+    setLoading(false)
+    webviewReady.current = true
+    // Register push token now that the page has session cookies available
+    if (expoPushToken.current) {
+      injectTokenRegistration(expoPushToken.current)
+    }
+  }
 
   return (
     <View style={s.root}>
@@ -160,35 +192,35 @@ export default function App() {
             // Keep all starkteam.info links inside the app
             onShouldStartLoadWithRequest={req => {
               const url = req.url
-              if (
+              return (
                 url.startsWith('https://starkteam.info') ||
                 url.startsWith('http://starkteam.info') ||
                 url.startsWith('about:') ||
                 url.startsWith('blob:')
-              ) return true
-              // External URLs — block (prevent leaving the app)
-              return false
+              )
             }}
 
             onNavigationStateChange={state => {
               canGoBackRef.current = state.canGoBack
             }}
 
-            onLoadStart={() => setLoading(true)}
-            onLoadEnd={()   => setLoading(false)}
-            onError={()     => { setLoading(false); setError(true) }}
+            onLoadStart={() => { setLoading(true); webviewReady.current = false }}
+            onLoadEnd={handleLoadEnd}
+            onError={() => { setLoading(false); setError(true) }}
             onHttpError={({ nativeEvent }) => {
-              if (nativeEvent.statusCode >= 500) {
-                setLoading(false); setError(true)
-              }
+              if (nativeEvent.statusCode >= 500) { setLoading(false); setError(true) }
             }}
 
             onMessage={msg => {
               try {
                 const data = JSON.parse(msg.nativeEvent.data)
                 if (data.type === 'reregister') {
-                  registerForPushNotificationsAsync().then(token => {
-                    if (token) sendTokenToServer(token)
+                  // Website requested a push re-register — get fresh token and inject
+                  getExpoPushToken().then(token => {
+                    if (token) {
+                      expoPushToken.current = token
+                      injectTokenRegistration(token)
+                    }
                   })
                 }
               } catch {}
@@ -204,18 +236,16 @@ export default function App() {
             cacheEnabled
             cacheMode="LOAD_CACHE_ELSE_NETWORK"
             setSupportMultipleWindows={false}
-            startInLoadingState={false}
-            // Hint to Android that this is a trusted app shell
             applicationNameForUserAgent="StarkTeamApp/1.0"
 
             // Media
             allowsInlineMediaPlayback
             mediaPlaybackRequiresUserAction={false}
             pullToRefreshEnabled
-            injectedJavaScriptBeforeContentLoaded={injectedJS}
+            injectedJavaScriptBeforeContentLoaded={injectedJSBeforeLoad}
           />
 
-          {/* Loading overlay — branded splash shown while page loads */}
+          {/* Branded splash — shown while page is loading */}
           {loading && (
             <View style={s.loadingOverlay}>
               <Image
@@ -244,12 +274,10 @@ const s = StyleSheet.create({
     backgroundColor: NAVY,
   },
   splashLogo: {
-    width: 90, height: 90, borderRadius: 18,
-    marginBottom: 16,
+    width: 90, height: 90, borderRadius: 18, marginBottom: 16,
   },
   splashTitle: {
-    fontSize: 24, fontWeight: '800', color: '#fff',
-    letterSpacing: -0.5,
+    fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.5,
   },
   loadingText: {
     fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 10,
