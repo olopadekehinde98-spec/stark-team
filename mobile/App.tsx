@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   BackHandler, Platform, StatusBar, StyleSheet,
-  Text, ToastAndroid, TouchableOpacity, View, ActivityIndicator,
+  Text, ToastAndroid, TouchableOpacity, View, ActivityIndicator, Image,
 } from 'react-native'
 import { WebView } from 'react-native-webview'
 import * as Notifications from 'expo-notifications'
@@ -204,6 +204,9 @@ export default function App() {
             cacheEnabled
             cacheMode="LOAD_CACHE_ELSE_NETWORK"
             setSupportMultipleWindows={false}
+            startInLoadingState={false}
+            // Hint to Android that this is a trusted app shell
+            applicationNameForUserAgent="StarkTeamApp/1.0"
 
             // Media
             allowsInlineMediaPlayback
@@ -212,13 +215,17 @@ export default function App() {
             injectedJavaScriptBeforeContentLoaded={injectedJS}
           />
 
-          {/* Loading overlay — shown while page is loading */}
+          {/* Loading overlay — branded splash shown while page loads */}
           {loading && (
             <View style={s.loadingOverlay}>
-              <View style={s.loadingCard}>
-                <ActivityIndicator size="large" color={GOLD} />
-                <Text style={s.loadingText}>Loading Stark Team…</Text>
-              </View>
+              <Image
+                source={require('./assets/icon.png')}
+                style={s.splashLogo}
+                resizeMode="contain"
+              />
+              <Text style={s.splashTitle}>Stark Team</Text>
+              <ActivityIndicator size="large" color={GOLD} style={{ marginTop: 32 }} />
+              <Text style={s.loadingText}>Loading…</Text>
             </View>
           )}
         </>
@@ -236,11 +243,16 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: NAVY,
   },
-  loadingCard: {
-    alignItems: 'center', gap: 16,
+  splashLogo: {
+    width: 90, height: 90, borderRadius: 18,
+    marginBottom: 16,
+  },
+  splashTitle: {
+    fontSize: 24, fontWeight: '800', color: '#fff',
+    letterSpacing: -0.5,
   },
   loadingText: {
-    fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: '600',
+    fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 10,
   },
 
   errorWrap:  { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: NAVY },

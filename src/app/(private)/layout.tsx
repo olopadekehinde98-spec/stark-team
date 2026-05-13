@@ -301,16 +301,25 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
     }
 
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-      userId = user.id
+      // getSession() reads the JWT from localStorage — no network call, instant.
+      // This is safe here because Supabase RLS protects the actual data.
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { router.push('/login'); return }
+      userId = session.user.id
+
+      // Fire profile + notifications in parallel immediately (no auth round-trip)
       const [profRes, notifRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role,avatar_url,is_active').eq('id', user.id).single(),
-        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
+        supabase.from('users').select('full_name,rank,role,avatar_url,is_active').eq('id', session.user.id).single(),
+        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false),
       ])
       setProfile(profRes.data)
       setNotif(notifRes.count ?? 0)
       registerPushSubscription()
+
+      // Background: re-validate token with Supabase server (catches revoked sessions)
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) router.push('/login')
+      }).catch(() => {})
     })()
 
     // Re-fetch count instantly when notifications page marks items as read
