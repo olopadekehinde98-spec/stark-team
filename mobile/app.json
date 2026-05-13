@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -35,25 +35,23 @@
         "VIBRATE",
         "POST_NOTIFICATIONS"
       ],
-      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true
     },
     "plugins": [
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
           "color": "#D4A017",
           "defaultChannel": "default",
           "sounds": []
         }
-      ],
-      "expo-device"
+      ]
     ],
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "290a89e0-b659-40a7-b9a8-f36efe3b6167"
       }
-    }
+    },
+    "owner": "samueltee"
   }
 }
