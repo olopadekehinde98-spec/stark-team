@@ -1,5 +1,6 @@
 'use client'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -139,24 +140,31 @@ async function subscribeToPush() {
 
 /** Visible push-permission banner — shown until user enables or explicitly dismisses */
 function PushPermissionBanner() {
-  const [show,   setShow]   = useState(false)
-  const [status, setStatus] = useState<'idle'|'asking'|'done'>('idle')
+  const [show,    setShow]   = useState(false)
+  const [denied,  setDenied] = useState(false)
+  const [status,  setStatus] = useState<'idle'|'asking'|'done'>('idle')
 
   useEffect(() => {
-    // Only show if push is supported and permission not yet granted/denied
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return
-    if (Notification.permission === 'default') {
-      // Delay slightly so it doesn't appear before the page loads
-      const t = setTimeout(() => setShow(true), 2500)
+    const perm = Notification.permission
+    if (perm === 'granted') {
+      // Already granted — silently subscribe (ensure subscription is fresh)
+      subscribeToPush().catch(() => {})
+      return
+    }
+    if (perm === 'denied') {
+      // Show a message telling them how to re-enable
+      const dismissed = sessionStorage.getItem('push-denied-dismissed')
+      if (!dismissed) setDenied(true)
+      return
+    }
+    // 'default' — show enable banner unless user dismissed this session
+    const dismissed = sessionStorage.getItem('push-banner-dismissed')
+    if (!dismissed) {
+      const t = setTimeout(() => setShow(true), 1000)
       return () => clearTimeout(t)
     }
-    // If already granted but not subscribed, silently subscribe
-    if (Notification.permission === 'granted') {
-      subscribeToPush().catch(() => {})
-    }
   }, [])
-
-  if (!show) return null
 
   async function handleEnable() {
     setStatus('asking')
@@ -165,10 +173,45 @@ function PushPermissionBanner() {
       await subscribeToPush()
       setStatus('done')
       setTimeout(() => setShow(false), 1800)
+    } else if (permission === 'denied') {
+      setShow(false)
+      setDenied(true)
     } else {
       setShow(false)
     }
   }
+
+  function dismiss() {
+    sessionStorage.setItem('push-banner-dismissed', '1')
+    setShow(false)
+  }
+
+  function dismissDenied() {
+    sessionStorage.setItem('push-denied-dismissed', '1')
+    setDenied(false)
+  }
+
+  if (denied) {
+    return (
+      <div style={{
+        background: '#1a1a2e', borderBottom: '2px solid #D97706',
+        padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 18, flexShrink: 0 }}>🔕</span>
+        <div style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+          Notifications are <strong style={{ color: '#fbbf24' }}>blocked</strong> in your browser.
+          To enable: tap the lock/info icon in your address bar → Site settings → Allow Notifications.
+        </div>
+        <button onClick={dismissDenied} style={{
+          padding: '5px 10px', borderRadius: 6, fontSize: 11,
+          background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)',
+          border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', flexShrink: 0,
+        }}>✕</button>
+      </div>
+    )
+  }
+
+  if (!show) return null
 
   return (
     <div style={{
@@ -198,7 +241,7 @@ function PushPermissionBanner() {
             }}>
               {status === 'asking' ? '…' : '🔔 Enable'}
             </button>
-            <button onClick={() => setShow(false)} style={{
+            <button onClick={dismiss} style={{
               padding: '7px 10px', borderRadius: 7, fontSize: 12,
               background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)',
               border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer',
@@ -308,11 +351,14 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
             display: 'flex', alignItems: 'center',
             textDecoration: 'none', marginRight: 20, flexShrink: 0,
           }}>
-            <div style={{
-              width: 34, height: 34, background: S.gold, borderRadius: 7,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, fontWeight: 800, color: S.navy,
-            }}>ST</div>
+            <Image
+              src="/stark-logo.png"
+              alt="Stark Team"
+              width={38}
+              height={38}
+              style={{ borderRadius: 7, objectFit: 'contain' }}
+              priority
+            />
             <span className="st-topbar-logo-text" style={{
               fontSize: 15, fontWeight: 700, color: '#fff',
               letterSpacing: '-.01em', marginLeft: 10,

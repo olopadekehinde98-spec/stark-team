@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const { data } = await admin
       .from('goals')
       .select('id,title,goal_type,status,deadline,created_at,user_id,category,description,target_metric,current_metric')
-      .in('status', ['active', 'completed', 'pending_approval'])
+      .in('status', ['active', 'completed', 'pending_approval', 'rejected'])
       .order('created_at', { ascending: false })
       .limit(100)
 

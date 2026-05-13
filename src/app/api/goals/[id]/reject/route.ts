@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { sendPushToUser } from '@/lib/push'
 import { canVerify } from '@/lib/verification/canVerify'
 import { NextResponse } from 'next/server'
 
@@ -67,6 +68,12 @@ export async function POST(
     reference_id:   params.id,
     reference_type: 'goal',
   })
+
+  sendPushToUser(goal.user_id, {
+    title: 'Goal Rejected',
+    body:  `Your goal was rejected. Reason: ${body.rejection_reason}`,
+    url:   `/goals/${params.id}`,
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }
