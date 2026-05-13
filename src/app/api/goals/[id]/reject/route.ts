@@ -26,7 +26,7 @@ export async function POST(
 
   const { data: goal } = await adminClient
     .from('goals')
-    .select('id, status, user_id, users!inner(rank, branch_id, invited_by)')
+    .select('id, status, user_id, title, users!inner(rank, branch_id, invited_by)')
     .eq('id', params.id)
     .single()
   if (!goal) return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
@@ -60,18 +60,20 @@ export async function POST(
     .update({ status: 'rejected', updated_at: new Date().toISOString() })
     .eq('id', params.id)
 
+  const goalTitle = (goal as any).title ?? 'Your goal'
+
   await adminClient.from('notifications').insert({
     user_id:        goal.user_id,
     type:           'goal_rejected',
     title:          'Goal Rejected',
-    body:           `Your goal was rejected. Reason: ${body.rejection_reason}`,
+    body:           `"${goalTitle}" was rejected. Reason: ${body.rejection_reason}`,
     reference_id:   params.id,
     reference_type: 'goal',
   })
 
   sendPushToUser(goal.user_id, {
-    title: 'Goal Rejected',
-    body:  `Your goal was rejected. Reason: ${body.rejection_reason}`,
+    title: 'Goal Rejected ❌',
+    body:  `"${goalTitle}" was rejected. Reason: ${body.rejection_reason}`,
     url:   `/goals/${params.id}`,
   }).catch(() => {})
 

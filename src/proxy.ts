@@ -41,7 +41,9 @@ export async function proxy(request: NextRequest) {
 
   // API routes handle their own auth — never redirect them to /login
   if (!user && !PUBLIC_ROUTES.some(r => path.startsWith(r)) && !path.startsWith('/api')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', path)
+    return NextResponse.redirect(loginUrl)
   }
 
   if (user && PUBLIC_ROUTES.some(r => path.startsWith(r))) {

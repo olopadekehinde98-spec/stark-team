@@ -55,6 +55,12 @@ export default function NotificationsPage() {
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      // Auto-delete notifications older than 7 days
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      await supabase.from('notifications').delete()
+        .eq('user_id', user.id).lt('created_at', sevenDaysAgo)
+
       const { data } = await supabase
         .from('notifications')
         .select('id,type,title,body,created_at,is_read,reference_id,reference_type')
@@ -72,6 +78,7 @@ export default function NotificationsPage() {
     const supabase = createClient()
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
     await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+    window.dispatchEvent(new CustomEvent('notif-count-changed'))
   }
 
   async function markAll() {
@@ -81,6 +88,7 @@ export default function NotificationsPage() {
     await supabase.from('notifications').update({ is_read: true })
       .in('id', notifs.filter(n => !n.is_read).map(n => n.id))
     setMarkingAll(false)
+    window.dispatchEvent(new CustomEvent('notif-count-changed'))
   }
 
   async function handleClick(n: any) {

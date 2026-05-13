@@ -21,7 +21,7 @@ export async function POST(
 
   const { data: goal } = await adminClient
     .from('goals')
-    .select('id, status, user_id, users!inner(rank, branch_id, invited_by)')
+    .select('id, status, user_id, title, users!inner(rank, branch_id, invited_by)')
     .eq('id', params.id)
     .single()
   if (!goal) return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
@@ -55,18 +55,20 @@ export async function POST(
     .update({ status: 'active', updated_at: new Date().toISOString() })
     .eq('id', params.id)
 
+  const goalTitle = (goal as any).title ?? 'Your goal'
+
   await adminClient.from('notifications').insert({
     user_id:        goal.user_id,
     type:           'goal_approved',
-    title:          'Goal Approved',
-    body:           'Your goal has been approved and is now active.',
+    title:          'Goal Approved ✅',
+    body:           `"${goalTitle}" has been approved and is now active.`,
     reference_id:   params.id,
     reference_type: 'goal',
   })
 
   sendPushToUser(goal.user_id, {
     title: 'Goal Approved ✅',
-    body:  'Your goal has been approved and is now active.',
+    body:  `"${goalTitle}" has been approved and is now active.`,
     url:   `/goals/${params.id}`,
   }).catch(() => {})
 
