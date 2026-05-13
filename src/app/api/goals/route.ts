@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -14,13 +15,24 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Enforce Nigeria time window: 5 AM – 12 PM WAT (UTC+1)
-  const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
-  if (nigeriaHour < 5 || nigeriaHour >= 12) {
-    return NextResponse.json(
-      { error: 'Goals can only be created between 5:00 AM and 12:00 PM Nigeria time (WAT). Please try again during the next window.' },
-      { status: 403 }
-    )
+  // Check admin goal window override first
+  const adminClient = createAdminClient()
+  const { data: setting } = await adminClient
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'goal_window_override')
+    .single()
+  const overrideOpen = setting?.value === 'true'
+
+  // Enforce Nigeria time window: 5 AM – 12 PM WAT (UTC+1) — skip if override is on
+  if (!overrideOpen) {
+    const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
+    if (nigeriaHour < 5 || nigeriaHour >= 12) {
+      return NextResponse.json(
+        { error: 'Goals can only be created between 5:00 AM and 12:00 PM Nigeria time (WAT). Please try again during the next window.' },
+        { status: 403 }
+      )
+    }
   }
 
   const body = await request.json()

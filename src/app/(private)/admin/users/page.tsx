@@ -270,11 +270,30 @@ export default function AdminUsersPage() {
                     </select>
                   </td>
                   <td style={tdStyle}>
-                    <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: !isActive })}
-                      disabled={!!busy('is_active')}
-                      style={{ fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', background: isActive ? S.okBg : S.errBg, color: isActive ? S.ok : S.err, outline:`1px solid ${isActive ? S.okBd : S.errBd}`, opacity: busy('is_active') ? 0.5 : 1 }}>
-                      {busy('is_active') ? '…' : isActive ? '● Active' : '○ Inactive'}
-                    </button>
+                    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                      {!isActive ? (
+                        /* Suspended — show Reinstate button prominently */
+                        <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: true })}
+                          disabled={!!busy('is_active')}
+                          style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:7, border:'none', cursor:'pointer', background:S.ok, color:'#fff', opacity: busy('is_active') ? 0.5 : 1 }}>
+                          {busy('is_active') ? '…' : '✓ Reinstate'}
+                        </button>
+                      ) : (
+                        <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: false })}
+                          disabled={!!busy('is_active')}
+                          style={{ fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', background:S.okBg, color:S.ok, outline:`1px solid ${S.okBd}`, opacity: busy('is_active') ? 0.5 : 1 }}>
+                          {busy('is_active') ? '…' : '● Active'}
+                        </button>
+                      )}
+                      {!isActive && (
+                        <span style={{ fontSize:10, color:S.err, fontWeight:700 }}>Suspended</span>
+                      )}
+                      {isActive && u.inactive4Days && (
+                        <span style={{ fontSize:10, color:S.warn, fontWeight:700, background:S.warnBg, padding:'2px 7px', borderRadius:10, border:`1px solid ${S.warnBd}` }}>
+                          ⚠ Inactive 4d+
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ ...tdStyle, fontSize:12, color:S.tx2, whiteSpace:'nowrap' }}>{fmtDate(u.created_at)}</td>
                   <td style={{ ...tdStyle, whiteSpace:'nowrap' }}>
@@ -329,11 +348,25 @@ export default function AdminUsersPage() {
                   <div style={{ fontSize:12, color:S.mu }}>@{u.username ?? '—'}</div>
                   <div style={{ fontSize:12, color:S.tx2, marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email ?? '—'}</div>
                 </div>
-                <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: !isActive })}
-                  disabled={!!busy('is_active')}
-                  style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:20, border:'none', cursor:'pointer', flexShrink:0, background: isActive ? S.okBg : S.errBg, color: isActive ? S.ok : S.err, outline:`1px solid ${isActive ? S.okBd : S.errBd}` }}>
-                  {busy('is_active') ? '…' : isActive ? '● Active' : '○ Inactive'}
-                </button>
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
+                  {!isActive ? (
+                    <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: true })}
+                      disabled={!!busy('is_active')}
+                      style={{ fontSize:11, fontWeight:700, padding:'5px 14px', borderRadius:7, border:'none', cursor:'pointer', background:S.ok, color:'#fff' }}>
+                      {busy('is_active') ? '…' : '✓ Reinstate'}
+                    </button>
+                  ) : (
+                    <button onClick={() => patch(u.id, 'is_active', 'status', { is_active: false })}
+                      disabled={!!busy('is_active')}
+                      style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:20, border:'none', cursor:'pointer', background:S.okBg, color:S.ok, outline:`1px solid ${S.okBd}` }}>
+                      {busy('is_active') ? '…' : '● Active'}
+                    </button>
+                  )}
+                  {!isActive && <span style={{ fontSize:10, color:S.err, fontWeight:700 }}>Suspended</span>}
+                  {isActive && u.inactive4Days && (
+                    <span style={{ fontSize:10, color:S.warn, fontWeight:700 }}>⚠ Inactive 4d+</span>
+                  )}
+                </div>
               </div>
 
               {/* Fields grid */}

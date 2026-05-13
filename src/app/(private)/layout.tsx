@@ -305,7 +305,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
       if (!user) { router.push('/login'); return }
       userId = user.id
       const [profRes, notifRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role,avatar_url').eq('id', user.id).single(),
+        supabase.from('users').select('full_name,rank,role,avatar_url,is_active').eq('id', user.id).single(),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
       ])
       setProfile(profRes.data)
@@ -332,6 +332,51 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
     : '??'
 
   const isMoreActive = MORE_LINKS.some(l => pathname.startsWith(l.href))
+
+  // Suspended account screen — shown instead of the full app
+  if (profile && profile.is_active === false) {
+    return (
+      <div style={{
+        minHeight:'100vh', background:'#0F1C2E',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        padding:24, fontFamily:'Inter, system-ui, sans-serif',
+      }}>
+        <div style={{
+          background:'#1a2744', border:'1px solid rgba(220,38,38,0.3)',
+          borderRadius:20, padding:'48px 36px', maxWidth:420, width:'100%', textAlign:'center',
+        }}>
+          <div style={{ fontSize:56, marginBottom:16 }}>🔒</div>
+          <h1 style={{ fontSize:22, fontWeight:800, color:'#fff', marginBottom:10 }}>
+            Account Suspended
+          </h1>
+          <p style={{ fontSize:14, color:'rgba(255,255,255,0.65)', lineHeight:1.7, marginBottom:28 }}>
+            Your account has been suspended by the admin.
+            You cannot access Stark Team until your account is reinstated.
+          </p>
+          <div style={{
+            background:'rgba(212,160,23,0.12)', border:'1px solid rgba(212,160,23,0.3)',
+            borderRadius:12, padding:'16px 20px', marginBottom:28,
+          }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#D4A017', marginBottom:4 }}>
+              To reinstate your account:
+            </div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>
+              Contact your admin or team leader to have your account reactivated.
+            </div>
+          </div>
+          <button
+            onClick={handleSignOut}
+            style={{
+              padding:'11px 28px', borderRadius:10, fontSize:13, fontWeight:700,
+              background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.55)',
+              border:'1px solid rgba(255,255,255,0.12)', cursor:'pointer',
+            }}>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

@@ -31,10 +31,30 @@ export async function GET() {
     // emails won't show but users will still load
   }
 
-  const users = (rows ?? []).map(u => ({
-    ...u,
-    email: emailMap[u.id] ?? null,
-  }))
+  // Fetch last activity date per user (within last 30 days)
+  const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: recentActivities } = await admin
+    .from('activities')
+    .select('user_id, submitted_at')
+    .gte('submitted_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+    .order('submitted_at', { ascending: false })
+
+  // Build a map: userId → most recent activity date
+  const lastActivityMap: Record<string, string> = {}
+  for (const a of recentActivities ?? []) {
+    if (!lastActivityMap[a.user_id]) lastActivityMap[a.user_id] = a.submitted_at
+  }
+
+  const users = (rows ?? []).map(u => {
+    const lastActivity = lastActivityMap[u.id] ?? null
+    const inactive4Days = !lastActivity || lastActivity < fourDaysAgo
+    return {
+      ...u,
+      email:        emailMap[u.id] ?? null,
+      lastActivity,
+      inactive4Days,
+    }
+  })
 
   return NextResponse.json({ users })
 }

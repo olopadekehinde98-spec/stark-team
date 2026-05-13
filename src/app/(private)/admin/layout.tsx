@@ -17,11 +17,13 @@ const ADMIN_LINKS = [
   { href: '/admin/announcements',       label: 'Announcements',     icon: '📢' },
   { href: '/admin/alerts',              label: 'Alerts',            icon: '🔴' },
   { href: '/admin/override',            label: 'Override',          icon: '🛡️' },
+  { href: '/admin/goal-window',         label: 'Goal Window',       icon: '🔓' },
   { href: '/admin/goal-history',        label: 'Goal History',      icon: '📅' },
   { href: '/admin/templates',           label: 'Templates',         icon: '📝' },
   { href: '/admin/ranks',               label: 'Ranks',             icon: '🏅' },
   { href: '/admin/leaderboard-settings',label: 'Leaderboard',       icon: '🏆' },
   { href: '/admin/verification-audit',  label: 'Audit',             icon: '🔍' },
+  { href: '/admin/test-push',           label: 'Test Push',         icon: '📱' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
