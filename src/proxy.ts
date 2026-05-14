@@ -37,11 +37,7 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // getSession() reads the JWT from the cookie — no network call needed.
-  // getUser() would hit the Supabase auth server on every request (slow).
-  // Real security lives in Supabase RLS; the middleware just handles redirects.
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user ?? null
+  const { data: { user } } = await supabase.auth.getUser()
 
   // API routes handle their own auth — never redirect them to /login
   if (!user && !PUBLIC_ROUTES.some(r => path.startsWith(r)) && !path.startsWith('/api')) {
