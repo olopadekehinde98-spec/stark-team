@@ -12,8 +12,9 @@ const S = {
 
 export default async function VerifyPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) redirect('/login')
+  const user = session.user
 
   const { data: profile } = await supabase
     .from('users').select('role,rank,branch_id').eq('id', user.id).single()

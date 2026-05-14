@@ -34,8 +34,9 @@ export default async function GoalsPage({
   const tab = (sp.tab ?? 'active') as GoalTab
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) redirect('/login')
+  const user = session.user
 
   const { data: goals } = await supabase
     .from('goals')

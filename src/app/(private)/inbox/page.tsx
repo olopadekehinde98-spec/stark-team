@@ -110,7 +110,7 @@ export default function InboxPage() {
             </div>
           </div>
         ) : displayed.map((n, i, arr) => {
-          const meta = TYPE_META[n.notification_type] ?? TYPE_META.default
+          const meta = TYPE_META[n.type] ?? TYPE_META.default
           return (
             <div
               key={n.id}
@@ -141,8 +141,8 @@ export default function InboxPage() {
                     <span style={{ fontSize:11, color:S.mu }}>{timeAgo(n.created_at)}</span>
                   </div>
                 </div>
-                {n.message && (
-                  <div style={{ fontSize:12, color:S.tx2, marginTop:4, lineHeight:1.55 }}>{n.message}</div>
+                {n.body && (
+                  <div style={{ fontSize:12, color:S.tx2, marginTop:4, lineHeight:1.55 }}>{n.body}</div>
                 )}
               </div>
             </div>
