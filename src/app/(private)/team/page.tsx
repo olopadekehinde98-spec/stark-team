@@ -185,8 +185,9 @@ export default function TeamPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setLoading(false); return }
+      const user = session.user
 
       const [{ data: me }, { data: members }] = await Promise.all([
         supabase.from('users')

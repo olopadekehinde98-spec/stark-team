@@ -49,8 +49,9 @@ export default function SubmitActivityPage() {
     const supabase = createClient()
     supabase.from('activity_templates').select('id,name,proof_required').eq('is_active', true)
       .then(({ data }) => setTemplates(data ?? []))
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user
+      if (!user) { setGoalsLoaded(true); return }
       const { data } = await supabase.from('goals').select('id,title').eq('user_id', user.id).eq('status','active')
       setGoals(data ?? [])
       setGoalsLoaded(true)

@@ -42,8 +42,8 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setMyId(user.id)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setMyId(session.user.id)
     })
   }, [])
 

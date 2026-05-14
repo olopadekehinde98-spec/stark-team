@@ -57,8 +57,9 @@ export default function ActivityDetailPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user
+      if (!user) { setLoading(false); return }
       const { data, error } = await supabase
         .from('activities')
         .select('*')

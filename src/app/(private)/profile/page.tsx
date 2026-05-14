@@ -42,8 +42,9 @@ export default function ProfilePage() {
 
   const loadProfile = useCallback(async () => {
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setLoading(false); return }
+    const user = session.user
     const [profRes, actsRes, goalsRes, lbRes] = await Promise.all([
       supabase.from('users').select('*').eq('id', user.id).single(),
       supabase.from('activities').select('status,title,activity_type,submitted_at').eq('user_id', user.id).order('submitted_at',{ascending:false}).limit(200),
@@ -82,8 +83,9 @@ export default function ProfilePage() {
   async function handleSave() {
     setSaving(true); setMsg('')
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return
+    const user = session.user
     const { error } = await supabase.from('users').update({ full_name: form.full_name, username: form.username, bio: form.bio }).eq('id', user.id)
     if (error) setMsg(error.message)
     else { setProfile((p: any) => ({ ...p, ...form })); setEditing(false); setMsg('Profile updated!') }

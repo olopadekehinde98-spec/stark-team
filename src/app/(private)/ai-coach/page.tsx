@@ -23,8 +23,9 @@ export default function AICoachPage() {
   useEffect(() => {
     const supabase = createClient()
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) return
+      const user = session.user
       const { data: prof } = await supabase.from('users').select('full_name,rank,role').eq('id', user.id).single()
       setStats(prof)
 

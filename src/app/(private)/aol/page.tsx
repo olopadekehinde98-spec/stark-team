@@ -50,8 +50,9 @@ export default function AOLPage() {
   useEffect(() => {
     const supabase = createClient()
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setLoading(false); return }
+      const user = session.user
 
       const [profRes, actsRes, teamRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),

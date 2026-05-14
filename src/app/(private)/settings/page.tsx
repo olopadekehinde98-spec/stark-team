@@ -48,7 +48,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user
       if (!user) return
       supabase.from('users').select('*').eq('id', user.id).single().then(({ data }) => {
         if (!data) return
@@ -97,8 +98,9 @@ export default function SettingsPage() {
     e.preventDefault()
     setSaving(true); setMsg(null)
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return
+    const user = session.user
     // Only bio is editable; name/username/email are admin-controlled
     const { error } = await supabase.from('users').update({ bio }).eq('id', user.id)
     setSaving(false)
@@ -108,8 +110,9 @@ export default function SettingsPage() {
   async function saveNotifs() {
     setSaving(true); setMsg(null)
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return
+    const user = session.user
     const { error } = await supabase.from('users').update(toggles).eq('id', user.id)
     setSaving(false)
     setMsg(error ? { text:'Failed: ' + error.message, ok:false } : { text:'Preferences saved ✓', ok:true })

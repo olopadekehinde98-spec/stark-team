@@ -39,7 +39,8 @@ export default function IssueRecognitionPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user
       if (!user) { router.push('/login'); return }
       const { data: prof } = await supabase.from('users').select('role').eq('id', user.id).single()
       if (!prof || (prof.role !== 'leader' && prof.role !== 'admin')) {

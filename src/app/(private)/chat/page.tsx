@@ -59,7 +59,8 @@ export default function ChatPage() {
   // Load current user profile
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user
       if (!user) return
       supabase.from('users').select('id, full_name, rank, role').eq('id', user.id).single()
         .then(({ data }) => setProfile(data))

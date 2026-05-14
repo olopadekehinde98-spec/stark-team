@@ -32,9 +32,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.href = '/login'; return }
-      supabase.from('users').select('role').eq('id', user.id).single()
+    // getSession() reads from cookies — no network call, instant
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) { window.location.href = '/login'; return }
+      supabase.from('users').select('role').eq('id', session.user.id).single()
         .then(({ data }) => {
           if (data?.role !== 'admin') { window.location.href = '/dashboard'; return }
           setOk(true)

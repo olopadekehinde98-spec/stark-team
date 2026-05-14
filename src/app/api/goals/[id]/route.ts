@@ -17,10 +17,10 @@ export async function GET(
   const admin = createAdminClient()
 
   // Fetch goal via admin client (bypasses goals_own RLS)
-  const query = admin.from('goals').select('*').eq('id', params.id)
-  // Members can only see their own goals
-  if (role === 'member') query.eq('user_id', user.id)
-  const { data: goal, error } = await query.single()
+  // Members can only see their own goals — chain the filter so it's not discarded
+  let goalQuery = admin.from('goals').select('*').eq('id', params.id)
+  if (role === 'member') goalQuery = goalQuery.eq('user_id', user.id)
+  const { data: goal, error } = await goalQuery.single()
   if (error || !goal) return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
 
   // Fetch evidence (activities linked to this goal) via admin client

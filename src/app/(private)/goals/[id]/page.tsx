@@ -66,8 +66,9 @@ export default function GoalDetailPage() {
   useEffect(() => {
     const supabase = createClient()
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setLoading(false); router.push('/login'); return }
+      const user = session.user
       setMyId(user.id)
 
       // Get current user's role
