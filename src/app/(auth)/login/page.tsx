@@ -1,11 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [showPw,   setShowPw]   = useState(false)
@@ -20,10 +18,12 @@ export default function LoginPage() {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
-      router.refresh()
+      // Full page navigation so the session cookie is always included in the
+      // next request — router.push() (client-side) can race with cookie setting
+      // in WebView and cause a redirect loop back to /login.
       const params = new URLSearchParams(window.location.search)
       const next = params.get('next')
-      router.push(next && next.startsWith('/') ? next : '/dashboard')
+      window.location.href = (next && next.startsWith('/')) ? next : '/dashboard'
     } catch (err: any) {
       setError(err?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
