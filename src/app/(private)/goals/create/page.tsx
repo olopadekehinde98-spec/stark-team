@@ -60,7 +60,7 @@ export default function CreateGoalPage() {
     setError('')
     setLoading(true)
     try {
-      const res  = await fetch('/api/goals', {
+      const res = await fetch('/api/goals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -72,10 +72,11 @@ export default function CreateGoalPage() {
           category: category || null,
         }),
       })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Failed to create goal'); setLoading(false); return }
+      let data: any = {}
+      try { data = await res.json() } catch { /* non-JSON response from server */ }
+      if (!res.ok) { setError(data.error ?? `Request failed (${res.status}) — please try again`); setLoading(false); return }
     } catch {
-      setError('Network error — please try again')
+      setError('Cannot reach the server — check your internet connection and try again')
       setLoading(false)
       return
     }

@@ -23,6 +23,7 @@ const ADMIN_LINKS = [
   { href: '/admin/ranks',               label: 'Ranks',             icon: '🏅' },
   { href: '/admin/leaderboard-settings',label: 'Leaderboard',       icon: '🏆' },
   { href: '/admin/verification-audit',  label: 'Audit',             icon: '🔍' },
+  { href: '/admin/errors',              label: 'Error Log',         icon: '🔴' },
   { href: '/admin/test-push',           label: 'Test Push',         icon: '📱' },
 ]
 

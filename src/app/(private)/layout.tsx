@@ -1,5 +1,6 @@
 'use client'
 import { createClient } from '@/lib/supabase/client'
+import { initErrorMonitor } from '@/lib/errorMonitor'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -329,6 +330,18 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
 
   // close More drawer on nav
   useEffect(() => { setShowMore(false) }, [pathname])
+
+  // Start error monitoring once the session is available
+  useEffect(() => {
+    const supabase = createClient()
+    let cleanup: (() => void) | undefined
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        cleanup = initErrorMonitor(session.user.id)
+      }
+    })
+    return () => { if (cleanup) cleanup() }
+  }, [])
 
   async function handleSignOut() {
     const supabase = createClient()
