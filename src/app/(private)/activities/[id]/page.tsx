@@ -76,8 +76,14 @@ export default function ActivityDetailPage() {
     })
   }, [id])
 
-  const withinEditWindow = activity?.edit_locked_at && new Date(activity.edit_locked_at) > new Date()
-  const canEdit = activity?.status === 'pending' && withinEditWindow
+  // Edit window: 24 hours from submission. Use edit_locked_at if set, otherwise submitted_at + 24h
+  const editDeadline = activity?.edit_locked_at
+    ? new Date(activity.edit_locked_at)
+    : activity?.submitted_at
+      ? new Date(new Date(activity.submitted_at).getTime() + 24 * 60 * 60 * 1000)
+      : null
+  const withinEditWindow = editDeadline && editDeadline > new Date()
+  const canEdit = activity?.status === 'pending' && !!withinEditWindow
 
   async function handleSave() {
     setSaving(true)
@@ -178,9 +184,9 @@ export default function ActivityDetailPage() {
       ) : (
         <>
           {/* Edit window notice */}
-          {canEdit && (
+          {canEdit && editDeadline && (
             <div style={{ background:S.warnBg, border:`1px solid ${S.warnBd}`, borderRadius:8, padding:'10px 14px', fontSize:12, color:S.warn, marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
-              ⏱ Edit window open until {fmtDateTime(activity.edit_locked_at)}
+              ⏱ Edit window open until {fmtDateTime(editDeadline.toISOString())}
             </div>
           )}
 
@@ -191,7 +197,7 @@ export default function ActivityDetailPage() {
                 { label:'Activity Type',  value:activity.activity_type },
                 { label:'Activity Date',  value:fmtDate(activity.activity_date) },
                 { label:'Submitted',      value:fmtDateTime(activity.submitted_at) },
-                { label:'Edit Window',    value:canEdit ? `Open until ${fmtDateTime(activity.edit_locked_at)}` : 'Locked' },
+                { label:'Edit Window',    value:canEdit && editDeadline ? `Open until ${fmtDateTime(editDeadline.toISOString())}` : 'Locked' },
               ].map(row => (
                 <div key={row.label}>
                   <div style={{ fontSize:11, fontWeight:600, color:S.mu, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>{row.label}</div>
