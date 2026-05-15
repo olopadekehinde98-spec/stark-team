@@ -1,6 +1,7 @@
 'use client'
 import { createClient } from '@/lib/supabase/client'
-import { initErrorMonitor } from '@/lib/errorMonitor'
+import ErrorBoundary from '@/components/error-monitor/ErrorBoundary'
+import ErrorMonitorAgent from '@/components/error-monitor/ErrorMonitorAgent'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -73,29 +74,27 @@ const BOTTOM_TABS = [
 ]
 
 const MORE_LINKS = [
-  { label: 'Team',          href: '/team',          icon: '👥' },
-  { label: 'Chat',          href: '/chat',           icon: '💬' },
-  { label: 'Inbox',         href: '/inbox',          icon: '📥' },
-  { label: 'Recognition',   href: '/recognition',    icon: '🏅' },
-  { label: 'Notifications', href: '/notifications',  icon: '🔔' },
-  { label: 'AOL',           href: '/aol',            icon: '📊' },
-  { label: 'Profile',       href: '/profile',        icon: '👤' },
-  { label: 'Settings',      href: '/settings',       icon: '⚙️'  },
-  { label: 'Help',          href: '/help',           icon: '❓' },
+  { label: 'Team',        href: '/team',        icon: '👥' },
+  { label: 'Chat',        href: '/chat',        icon: '💬' },
+  { label: 'Inbox',       href: '/inbox',       icon: '📥' },
+  { label: 'Recognition', href: '/recognition', icon: '🏅' },
+  { label: 'AOL',         href: '/aol',         icon: '📊' },
+  { label: 'Profile',     href: '/profile',     icon: '👤' },
+  { label: 'Settings',    href: '/settings',    icon: '⚙️'  },
+  { label: 'Help',        href: '/help',        icon: '❓' },
 ]
 
 const DESKTOP_LINKS = [
-  { label: 'Dashboard',    href: '/dashboard'    },
-  { label: 'Activities',   href: '/activities'   },
-  { label: 'Goals',        href: '/goals'        },
-  { label: 'AOL',          href: '/aol'          },
-  { label: 'Leaderboard',  href: '/leaderboard'  },
-  { label: 'Team',         href: '/team'         },
-  { label: 'Chat',         href: '/chat'         },
-  { label: 'Inbox',        href: '/inbox'        },
-  { label: 'Recognition',  href: '/recognition'  },
-  { label: 'Notifications',href: '/notifications'},
-  { label: '❓ Help',      href: '/help'         },
+  { label: 'Dashboard',   href: '/dashboard'   },
+  { label: 'Activities',  href: '/activities'  },
+  { label: 'Goals',       href: '/goals'       },
+  { label: 'AOL',         href: '/aol'         },
+  { label: 'Leaderboard', href: '/leaderboard' },
+  { label: 'Team',        href: '/team'        },
+  { label: 'Chat',        href: '/chat'        },
+  { label: 'Inbox',       href: '/inbox'       },
+  { label: 'Recognition', href: '/recognition' },
+  { label: '❓ Help',     href: '/help'        },
 ]
 
 function fmtRank(rank?: string) {
@@ -282,50 +281,28 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
 
 // ── component ──────────────────────────────────────────────────────────────
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
-  const [profile,    setProfile]    = useState<any>(null)
-  const [notifCount, setNotif]      = useState(0)
-  const [showMore,   setShowMore]   = useState(false)
+  const [profile,  setProfile]  = useState<any>(null)
+  const [showMore, setShowMore] = useState(false)
   const [avatarErr,  setAvatarErr]  = useState(false)
   const pathname = usePathname()
   const router   = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
-    let userId: string | null = null
-
-    async function fetchUnread() {
-      if (!userId) return
-      const { count } = await supabase
-        .from('notifications').select('id', { count: 'exact', head: true })
-        .eq('user_id', userId).eq('is_read', false)
-      setNotif(count ?? 0)
-    }
 
     ;(async () => {
-      // getSession() reads the JWT from localStorage — no network call, instant.
-      // This is safe here because Supabase RLS protects the actual data.
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user) { router.push('/login'); return }
-      userId = session.user.id
 
-      // Fire profile + notifications in parallel immediately (no auth round-trip)
-      const [profRes, notifRes] = await Promise.all([
-        supabase.from('users').select('full_name,rank,role,avatar_url,is_active').eq('id', session.user.id).single(),
-        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false),
-      ])
-      setProfile(profRes.data)
-      setNotif(notifRes.count ?? 0)
+      const { data: profData } = await supabase
+        .from('users').select('full_name,rank,role,avatar_url,is_active').eq('id', session.user.id).single()
+      setProfile(profData)
       registerPushSubscription()
 
-      // Background: re-validate token with Supabase server (catches revoked sessions)
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) router.push('/login')
       }).catch(() => {})
     })()
-
-    // Re-fetch count instantly when notifications page marks items as read
-    window.addEventListener('notif-count-changed', fetchUnread)
-    return () => window.removeEventListener('notif-count-changed', fetchUnread)
   }, [router])
 
   // close More drawer on nav
@@ -481,28 +458,6 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
 
           {/* ── Right side (desktop: icons + profile | mobile: profile only) */}
           <div style={{ marginLeft: 'auto', display:'flex', alignItems:'center', gap: 6 }}>
-            {/* Notifications */}
-            <Link href="/notifications" style={{
-              position: 'relative', width: 36, height: 36, borderRadius: 7,
-              border: '1px solid rgba(255,255,255,0.12)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'rgba(255,255,255,0.65)', fontSize: 16, textDecoration: 'none',
-            }}>
-              🔔
-              {notifCount > 0 && (
-                <span style={{
-                  position:'absolute', top: -4, right: -4,
-                  minWidth: 18, height: 18, borderRadius: 9,
-                  background:'#DC2626', border: '2px solid #0F1C2E',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize: 9, fontWeight: 800, color: '#fff', lineHeight: 1,
-                  padding: '0 3px',
-                }}>
-                  {notifCount > 99 ? '99+' : notifCount}
-                </span>
-              )}
-            </Link>
-
             {/* Settings – desktop only */}
             <Link href="/settings" className="st-desktop-nav" style={{
               width: 36, height: 36, borderRadius: 7,
@@ -566,7 +521,9 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
             PAGE CONTENT
         ════════════════════════════════════════════════════════════ */}
         <main className="st-page" style={{ flex: 1, maxWidth: 1140, width: '100%', margin: '0 auto' }}>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
 
         {/* ════════════════════════════════════════════════════════════
@@ -635,30 +592,16 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {MORE_LINKS.map(link => {
                   const active = pathname.startsWith(link.href)
-                  const isNotif = link.href === '/notifications'
                   return (
                     <Link key={link.href} href={link.href} style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
                       gap: 6, padding: '14px 6px', borderRadius: 12,
-                      textDecoration: 'none', position: 'relative',
+                      textDecoration: 'none',
                       background: active ? 'rgba(212,160,23,0.15)' : 'rgba(255,255,255,0.05)',
                       border: `1px solid ${active ? 'rgba(212,160,23,0.3)' : 'rgba(255,255,255,0.08)'}`,
                       color: active ? S.gold : 'rgba(255,255,255,0.75)',
                     }}>
-                      <span style={{ fontSize: 22, position: 'relative' }}>
-                        {link.icon}
-                        {isNotif && notifCount > 0 && (
-                          <span style={{
-                            position:'absolute', top: -4, right: -6,
-                            minWidth: 16, height: 16, borderRadius: 8,
-                            background:'#DC2626', display:'flex', alignItems:'center',
-                            justifyContent:'center', fontSize: 8, fontWeight: 800,
-                            color: '#fff', padding: '0 2px', lineHeight: 1,
-                          }}>
-                            {notifCount > 99 ? '99+' : notifCount}
-                          </span>
-                        )}
-                      </span>
+                      <span style={{ fontSize: 22 }}>{link.icon}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{link.label}</span>
                     </Link>
                   )
@@ -708,6 +651,9 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
           </>
         )}
       </div>
+
+      {/* ── AI Error Monitor (admin/leader only) ──────────────── */}
+      <ErrorMonitorAgent role={profile?.role} />
     </>
   )
 }

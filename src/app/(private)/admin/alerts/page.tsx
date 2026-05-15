@@ -12,9 +12,8 @@ const S = {
 
 export default async function AdminAlertsPage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) redirect('/login')
-  const user = session.user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const { data: myProfile } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (myProfile?.role !== 'admin') redirect('/dashboard')
