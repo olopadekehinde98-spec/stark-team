@@ -45,3 +45,15 @@ supabase/.branches
 supabase/.temp
 
 .vercel
+
+# Nested node_modules (securelab, etc.)
+securelab/**/node_modules/
+
+# Claude worktree refs
+.claude/worktrees/
+
+# PWA generated files
+/public/sw.js
+/public/swe-worker-*.js
+/public/workbox-*.js
+/public/worker-*.js
