@@ -34,9 +34,8 @@ const PALETTES = [
 
 export default async function RecognitionPage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) redirect('/login')
-  const user = session.user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const { data: myProfile } = await supabase.from('users').select('role,rank').eq('id', user.id).single()
 
