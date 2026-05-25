@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
@@ -13,15 +13,15 @@ export async function POST(request: Request) {
 
   if (!message) return NextResponse.json({ error: 'Missing error message' }, { status: 400 })
 
-  // If ANTHROPIC_API_KEY is not configured, return a graceful fallback instead of crashing
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ analysis: 'AI analysis unavailable (ANTHROPIC_API_KEY not configured).' })
+  // If OPENAI_API_KEY is not configured, return a graceful fallback instead of crashing
+  if (!process.env.OPENAI_API_KEY) {
+    return NextResponse.json({ analysis: 'AI analysis unavailable (OPENAI_API_KEY not configured).' })
   }
 
   let analysis = 'Unable to analyze error.'
 
   try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
     const systemPrompt = `You are an expert error analyst embedded in the Stark Team web app (Next.js 14, Supabase, TypeScript).
 When given an error, you respond with:
@@ -34,16 +34,18 @@ Keep the total response under 120 words. Be direct and actionable. Do not repeat
     const userMsg = `Error type: ${type ?? 'runtime'}
 Message: ${message}${stack ? `\nStack: ${stack.split('\n').slice(0, 4).join('\n')}` : ''}${url ? `\nPage: ${url}` : ''}${context ? `\nContext: ${context}` : ''}`
 
-    const response = await anthropic.messages.create({
-      model:      'claude-haiku-4-5-20251001',
+    const response = await openai.chat.completions.create({
+      model:      'gpt-4o-mini',
       max_tokens: 200,
-      system:     systemPrompt,
-      messages:   [{ role: 'user', content: userMsg }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userMsg },
+      ],
     })
 
-    analysis = response.content[0]?.type === 'text' ? response.content[0].text : 'Unable to analyze error.'
+    analysis = response.choices[0]?.message?.content ?? 'Unable to analyze error.'
   } catch {
-    // Anthropic call failed — return graceful response, never 500
+    // OpenAI call failed — return graceful response, never 500
     return NextResponse.json({ analysis: 'AI analysis temporarily unavailable.' })
   }
 
