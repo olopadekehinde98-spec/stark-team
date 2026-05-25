@@ -20,7 +20,12 @@ export default async function VerifyPage() {
     .from('users').select('role,rank,branch_id').eq('id', user.id).single()
   if (!profile || (profile.role !== 'leader' && profile.role !== 'admin')) redirect('/dashboard')
 
-  const admin = createAdminClient()
+  let admin
+  try {
+    admin = createAdminClient()
+  } catch {
+    redirect('/dashboard')
+  }
 
   let memberIds: string[] = []
 
