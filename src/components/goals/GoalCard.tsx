@@ -1,1 +1,1 @@
-export default function GoalCard(props: any) { return null }
+﻿export default function GoalCard() { return null }

@@ -1,12 +1,3 @@
-const RANK_ORDER: Record<string, number> = {
-  e_member:          0,
-  distributor:       1,
-  manager:           2,
-  senior_manager:    3,
-  executive_manager: 4,
-  director:          5,
-}
-
 // What each rank is allowed to verify (ranks below them only)
 const VERIFICATION_PERMISSIONS: Record<string, string[]> = {
   e_member:          [],

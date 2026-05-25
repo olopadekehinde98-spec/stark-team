@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
@@ -77,6 +78,7 @@ export default function ChatPage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMessages(channel)
   }, [channel, fetchMessages])
 

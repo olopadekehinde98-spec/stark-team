@@ -1,1 +1,1 @@
-export default function PositionHistoryChart(props: any) { return null }
+﻿export default function PositionHistoryChart() { return null }

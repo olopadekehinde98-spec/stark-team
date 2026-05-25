@@ -1,13 +1,14 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 async function requireAdmin() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) return null
-  const { data } = await supabase.from('users').select('role').eq('id', session.user.id).single()
-  return data?.role === 'admin' ? session.user : null
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data } = await supabase.from('users').select('role').eq('id', user.id).single()
+  return data?.role === 'admin' ? user : null
 }
 
 export async function GET() {

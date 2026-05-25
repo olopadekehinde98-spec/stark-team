@@ -11,7 +11,7 @@ export default function AICoachQuickTip({ tip }: { tip:Tip|null }) {
       <div className="flex items-center gap-2 mb-3">
         <Bot size={16} style={{ color:'var(--gold)' }} />
         <h3 className="text-sm font-semibold" style={{ color:'var(--text-secondary)' }}>AI Coach</h3>
-        <Badge variant={variant as any}>{tip.priority}</Badge>
+        <Badge variant={variant}>{tip.priority}</Badge>
       </div>
       <p className="text-sm font-medium" style={{ color:'var(--text-primary)' }}>{tip.message}</p>
       <p className="text-xs mt-2" style={{ color:'var(--text-muted)' }}>{tip.action}</p>

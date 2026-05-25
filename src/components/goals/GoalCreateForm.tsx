@@ -1,1 +1,1 @@
-export default function GoalCreateForm(props: any) { return null }
+﻿export default function GoalCreateForm() { return null }

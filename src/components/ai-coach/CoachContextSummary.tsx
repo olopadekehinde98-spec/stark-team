@@ -1,1 +1,1 @@
-export default function CoachContextSummary(props: any) { return null }
+﻿export default function CoachContextSummary() { return null }

@@ -1,6 +1,8 @@
 import Badge from './Badge'
 
-const statusMap: Record<string, { label: string; variant: any }> = {
+type BadgeVariant = 'success' | 'warning' | 'default' | 'error' | 'pending' | 'blue' | 'cyan' | 'gold' | 'info'
+
+const statusMap: Record<string, { label: string; variant: BadgeVariant }> = {
   pending:    { label: 'Pending',    variant: 'pending' },
   verified:   { label: 'Verified',   variant: 'success' },
   unverified: { label: 'Unverified', variant: 'warning' },
@@ -12,6 +14,6 @@ const statusMap: Record<string, { label: string; variant: any }> = {
 }
 
 export default function StatusBadge({ status }: { status: string }) {
-  const config = statusMap[status] ?? { label: status, variant: 'default' }
+  const config = statusMap[status] ?? { label: status, variant: 'default' as BadgeVariant }
   return <Badge variant={config.variant}>{config.label}</Badge>
 }

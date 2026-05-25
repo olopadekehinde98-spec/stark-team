@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export function useGoals() {
-  const [goals, setGoals] = useState<any[]>([])
+  const [goals, setGoals] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

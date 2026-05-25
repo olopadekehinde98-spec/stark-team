@@ -5,8 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) return NextResponse.json({ ok: false })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ ok: false })
 
     const body = await req.json().catch(() => ({}))
     const { type, message, page, stack } = body
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const admin = createAdminClient()
     await admin.from('audit_logs').insert({
-      actor_id: session.user.id,
+      actor_id: user.id,
       action: 'client_error',
       target_type: type ?? 'js_error',
       metadata: {

@@ -91,7 +91,7 @@ export default function Sidebar({ userRole, userName, userRank }: SidebarProps) 
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         {NAV.map(group => {
           const visibleItems = group.items.filter(i =>
-            !(i as any).leaderOnly || userRole === 'leader' || userRole === 'admin'
+            !(i as { leaderOnly?: boolean }).leaderOnly || userRole === 'leader' || userRole === 'admin'
           )
           if (!visibleItems.length) return null
           return (

@@ -37,7 +37,7 @@ export default function SetupPage() {
         fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3D6070',
       }}>{label}</label>
       <input
-        type={type} required value={(form as any)[key]}
+        type={type} required value={(form as Record<string, string>)[key]}
         onChange={set(key)} placeholder={placeholder}
         style={{
           width: '100%', padding: '10px 14px', fontSize: 13,

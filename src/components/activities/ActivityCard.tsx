@@ -1,1 +1,1 @@
-export default function ActivityCard(props: any) { return null }
+﻿export default function ActivityCard() { return null }

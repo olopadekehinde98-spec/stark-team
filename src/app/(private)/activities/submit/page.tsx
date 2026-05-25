@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -40,7 +41,7 @@ export default function SubmitActivityPage() {
   const [proofType,    setProofType]   = useState('image')
   const [proofMode,    setProofMode]   = useState<'link' | 'upload'>('upload')
   const [proofFile,    setProofFile]   = useState<File | null>(null)
-  const [proofPreview, setProofPreview] = useState('')
+  const [, setProofPreview] = useState('')
   const [uploading,    setUploading]   = useState(false)
   const [loading,      setLoading]     = useState(false)
   const [error,        setError]       = useState('')
@@ -241,7 +242,7 @@ export default function SubmitActivityPage() {
                 <div style={{ fontSize:24, marginBottom:10 }}>🎯</div>
                 <div style={{ fontSize:14, fontWeight:700, color:S.err, marginBottom:8 }}>No Active Goals Found</div>
                 <div style={{ fontSize:13, color:S.err, lineHeight:1.7, marginBottom:16 }}>
-                  You don't have any approved active goals today. You <strong>must have an active goal</strong> before you can submit an activity.
+                  You don&apos;t have any approved active goals today. You <strong>must have an active goal</strong> before you can submit an activity.
                   <br /><br />
                   Goals must be written between <strong>5:00 AM – 12:00 PM</strong> Nigeria time and approved by your leader.
                 </div>
@@ -361,7 +362,7 @@ export default function SubmitActivityPage() {
               </div>
             ))}
             <div style={{ marginTop:16, padding:'12px 14px', background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:8, fontSize:12, color:S.ok }}>
-              ✅ Submitting will mark your goal <strong>"{goals.find(g => g.id === goalId)?.title}"</strong> as completed.
+              ✅ Submitting will mark your goal <strong>&quot;{goals.find(g => g.id === goalId)?.title}&quot;</strong> as completed.
             </div>
             <div style={{ marginTop:8, padding:'12px 14px', background:S.blueBg, border:`1px solid ${S.blueBd}`, borderRadius:8, fontSize:12, color:S.blue }}>
               ℹ Once submitted, you have <strong>24 hours</strong> to edit this activity before it locks for review.

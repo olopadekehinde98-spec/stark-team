@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 const S = {
   s1:'#FFFFFF',s2:'#F8FAFC',s3:'#EEF2F7',bd:'#E2E8F0',
@@ -40,6 +39,7 @@ function VerifyCard({
   const [notes, setNotes] = useState('')
   const u    = activity.users
   const pal  = AVATAR_PALETTES[index % AVATAR_PALETTES.length]
+  // eslint-disable-next-line react-hooks/purity
   const waitH = Math.round((Date.now() - new Date(activity.submitted_at).getTime()) / 3600000)
 
   return (
@@ -126,12 +126,12 @@ function VerifyCard({
 }
 
 export default function VerifyQueueClient({
-  activities: initialActivities, currentUserId, verifiedToday, avgWaitHours,
+  activities: initialActivities, verifiedToday, avgWaitHours,
 }: {
-  activities: Activity[]; currentUserId: string; verifiedToday: number; avgWaitHours: number
+  activities: Activity[]; currentUserId?: string; verifiedToday: number; avgWaitHours: number
 }) {
   const [queue,      setQueue]      = useState(initialActivities)
-  const [processing, setProcessing] = useState<string | null>(null)
+  const [, setProcessing] = useState<string | null>(null)
 
   async function handleAction(id: string, action: 'verify' | 'reject' | 'skip', notes?: string) {
     if (action === 'skip') { setQueue(q => q.filter(a => a.id !== id)); return }

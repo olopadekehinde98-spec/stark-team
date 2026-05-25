@@ -62,7 +62,7 @@ export default function TestPushPage() {
         </h1>
         <p style={{ fontSize:13, color:S.tx2 }}>
           Send a real push notification to verify it appears on phones and browsers.
-          Use "My Device Only" first to test, then "All Members" for announcements.
+          Use &quot;My Device Only&quot; first to test, then &quot;All Members&quot; for announcements.
         </p>
       </div>
 

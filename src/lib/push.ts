@@ -1,11 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
+let vapidConfigured = false
+function ensureVapid() {
+  if (vapidConfigured) return
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  )
+  vapidConfigured = true
+}
 
 export interface PushPayload {
   title: string
@@ -61,6 +67,7 @@ async function sendExpoNotification(tokens: string[], payload: PushPayload) {
 
 /** Send a push notification to a single user (web + native). */
 export async function sendPushToUser(userId: string, payload: PushPayload) {
+  ensureVapid()
   const admin = createAdminClient()
 
   // Fetch web-push subscriptions AND expo tokens in parallel
@@ -93,6 +100,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
 
 /** Send a push notification to ALL users (e.g. daily reminder, announcements). */
 export async function sendPushToAll(payload: PushPayload) {
+  ensureVapid()
   const admin = createAdminClient()
 
   const [{ data: webSubs }, { data: expoRows }] = await Promise.all([

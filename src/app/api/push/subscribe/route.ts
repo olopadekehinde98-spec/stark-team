@@ -12,14 +12,20 @@ export async function POST(req: NextRequest) {
   if (!endpoint || !keys?.p256dh || !keys?.auth)
     return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 })
 
-  const admin = createAdminClient()
-  await admin.from('push_subscriptions').upsert({
-    user_id:  user.id,
-    endpoint,
-    p256dh:   keys.p256dh,
-    auth:     keys.auth,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'endpoint' })
+  try {
+    const admin = createAdminClient()
+    const { error } = await admin.from('push_subscriptions').upsert({
+      user_id:  user.id,
+      endpoint,
+      p256dh:   keys.p256dh,
+      auth:     keys.auth,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'endpoint' })
+    if (error) console.error('[push/subscribe] upsert error:', error.message)
+  } catch (err) {
+    console.error('[push/subscribe] unexpected error:', err)
+    // Return 200 so client doesn't retry aggressively — push is best-effort
+  }
 
   return NextResponse.json({ ok: true })
 }
@@ -33,8 +39,12 @@ export async function DELETE(req: NextRequest) {
   const { endpoint } = await req.json()
   if (!endpoint) return NextResponse.json({ error: 'Missing endpoint' }, { status: 400 })
 
-  const admin = createAdminClient()
-  await admin.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', user.id)
+  try {
+    const admin = createAdminClient()
+    await admin.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', user.id)
+  } catch (err) {
+    console.error('[push/subscribe DELETE] error:', err)
+  }
 
   return NextResponse.json({ ok: true })
 }

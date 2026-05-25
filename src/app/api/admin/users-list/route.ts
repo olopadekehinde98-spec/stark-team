@@ -21,7 +21,7 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   // Fetch auth users to get emails (auth.users always has email)
-  let emailMap: Record<string, string> = {}
+  const emailMap: Record<string, string> = {}
   try {
     const { data: authData } = await admin.auth.admin.listUsers({ perPage: 1000 })
     for (const u of authData?.users ?? []) {

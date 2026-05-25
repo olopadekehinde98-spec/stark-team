@@ -106,7 +106,7 @@ export default async function GoalsPage({
         </div>
       ) : (
         <div className="goals-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-          {list.map((g, idx) => {
+          {list.map((g) => {
             const pct   = g.target_metric > 0 ? Math.min(100, Math.round(((g.current_metric ?? 0) / g.target_metric) * 100)) : 0
             const color = TYPE_COLORS[g.goal_type] ?? S.mu
             const shortId = g.id?.slice(0, 8).toUpperCase() ?? ''

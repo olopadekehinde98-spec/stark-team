@@ -32,7 +32,20 @@
       "mcp__72acdd71-2654-4d49-9bb1-a29ac579595f__apply_migration",
       "Bash(npx next *)",
       "Bash(git commit -m 'Fix TypeScript error: add missing bd2 color to help page S object *)",
-      "Bash(git -C C:/Users/SAMUEL/stark-team diff --stat HEAD~1 HEAD)"
+      "Bash(git -C C:/Users/SAMUEL/stark-team diff --stat HEAD~1 HEAD)",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Bash(dir /b \"C:\\\\Users\\\\SAMUEL\\\\stark-team\\\\.claude\\\\worktrees\\\\focused-babbage-e10365\")",
+      "Bash(npx eslint *)",
+      "Bash(dir \"C:\\\\Users\\\\SAMUEL\\\\stark-team\\\\.claude\\\\worktrees\\\\focused-babbage-e10365\\\\src\\\\app\\\\api\\\\users\" /s /b)",
+      "Bash(grep -v \"^$\")",
+      "Bash(ping -n 6 127.0.0.1)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/login)",
+      "Bash(curl -v -s -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"testpass\"}')",
+      "Bash(ls \"C:\\\\Users\\\\SAMUEL\\\\stark-team\\\\.env.local\" 2>&1 && echo EXISTS || echo MISSING)",
+      "Bash(cp \"C:\\\\Users\\\\SAMUEL\\\\stark-team\\\\.env.local\" \"C:\\\\Users\\\\SAMUEL\\\\stark-team\\\\.claude\\\\worktrees\\\\focused-babbage-e10365\\\\.env.local\" && echo COPIED)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(ping -n 8 127.0.0.1)"
     ]
   }
 }

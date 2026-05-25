@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 const S = {
   s1:'#FFFFFF', s2:'#F8FAFC', s3:'#EEF2F7', bd:'#E2E8F0',

@@ -1,1 +1,1 @@
-export default function AuditLogTable(props: any) { return null }
+﻿export default function AuditLogTable() { return null }

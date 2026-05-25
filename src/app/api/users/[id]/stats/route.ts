@@ -11,8 +11,8 @@ export async function GET(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { data: activities } = await supabase.from('activities').select('status').eq('user_id', params.id)
   const total = activities?.length ?? 0
-  const verified = activities?.filter((a: any) => a.status === 'verified').length ?? 0
-  const pending = activities?.filter((a: any) => a.status === 'pending').length ?? 0
-  const rejected = activities?.filter((a: any) => a.status === 'rejected').length ?? 0
+  const verified = activities?.filter((a: { status: string }) => a.status === 'verified').length ?? 0
+  const pending = activities?.filter((a: { status: string }) => a.status === 'pending').length ?? 0
+  const rejected = activities?.filter((a: { status: string }) => a.status === 'rejected').length ?? 0
   return NextResponse.json({ total, verified, pending, rejected })
 }

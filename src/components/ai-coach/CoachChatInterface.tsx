@@ -1,1 +1,1 @@
-export default function CoachChatInterface(props: any) { return null }
+﻿export default function CoachChatInterface() { return null }

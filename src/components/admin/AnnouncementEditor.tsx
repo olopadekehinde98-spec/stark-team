@@ -54,8 +54,8 @@ export default function AnnouncementEditor({ initial = {}, onSave, onCancel }: P
         published_at: publishedAt ? new Date(publishedAt).toISOString() : null,
         expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       })
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to save')
+    } catch (err: unknown) {
+      setError((err as Error).message ?? 'Failed to save')
     } finally {
       setSaving(false)
     }

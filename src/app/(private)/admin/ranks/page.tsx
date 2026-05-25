@@ -37,7 +37,7 @@ export default function AdminRankCriteriaPage() {
       <div style={{ marginBottom:22 }}>
         <h1 style={{ fontSize:22, fontWeight:800, color:S.tx, letterSpacing:'-0.03em', marginBottom:4 }}>Rank Criteria</h1>
         <p style={{ fontSize:13, color:S.tx2 }}>
-          Neolife rank levels — update a member's rank from the Members page after they achieve it
+          Neolife rank levels — update a member&apos;s rank from the Members page after they achieve it
         </p>
       </div>
 

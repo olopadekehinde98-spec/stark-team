@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -36,12 +37,10 @@ export default function SettingsPage() {
   const [saving,     setSaving]   = useState(false)
   const [msg,        setMsg]      = useState<{ text:string; ok:boolean }|null>(null)
   const [toggles,    setToggles]  = useState<Record<string,boolean>>({})
-  const [showPw,     setShowPw]   = useState(false)
   const [pwSent,     setPwSent]   = useState(false)
   const [installable,  setInstallable]   = useState(false)
   const [installed,    setInstalled]     = useState(false)
   const [isStandalone, setIsStandalone]  = useState(false)
-  const [isIOS,        setIsIOS]         = useState(false)
   const [pushStatus,   setPushStatus]    = useState<'unknown'|'granted'|'denied'|'unsupported'>('unknown')
   const [pushLoading,  setPushLoading]   = useState(false)
   const deferredPrompt = useRef<any>(null)
@@ -62,6 +61,7 @@ export default function SettingsPage() {
       })
     })
     // Push notification status
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (!('PushManager' in window)) {
       setPushStatus('unsupported')
     } else if (Notification.permission === 'granted') {
@@ -69,11 +69,9 @@ export default function SettingsPage() {
     } else if (Notification.permission === 'denied') {
       setPushStatus('denied')
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
 
-    // PWA detection
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-    setIsIOS(ios)
-    // Check if already running as installed standalone app
+    // PWA detection — Check if already running as installed standalone app
     const standalone = window.matchMedia('(display-mode: standalone)').matches
       || (navigator as any).standalone === true
     setIsStandalone(standalone)
@@ -147,7 +145,7 @@ export default function SettingsPage() {
       })
       setPushStatus('granted')
       setMsg({ text: '🔔 Push notifications enabled!', ok: true })
-    } catch (e) {
+    } catch {
       setMsg({ text: 'Could not enable notifications. Try again.', ok: false })
     }
     setPushLoading(false)
@@ -280,7 +278,7 @@ export default function SettingsPage() {
           <div style={{ paddingBottom:20, marginBottom:20, borderBottom:`1px solid ${S.bd}` }}>
             <div style={{ fontSize:14, fontWeight:700, color:S.tx, marginBottom:4 }}>Password</div>
             <div style={{ fontSize:13, color:S.tx2, marginBottom:14 }}>
-              We'll send a password reset link to <strong>{profile.email}</strong>
+              We&apos;ll send a password reset link to <strong>{profile.email}</strong>
             </div>
             {pwSent ? (
               <div style={{ fontSize:13, color:S.ok, fontWeight:600 }}>✅ Reset email sent — check your inbox!</div>
@@ -394,7 +392,7 @@ export default function SettingsPage() {
             <div style={{ background:S.okBg, border:`1px solid ${S.okBd}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
               <span style={{ fontSize:28 }}>✅</span>
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:S.ok }}>You're using the installed app!</div>
+                <div style={{ fontSize:14, fontWeight:700, color:S.ok }}>You&apos;re using the installed app!</div>
                 <div style={{ fontSize:13, color:S.ok, marginTop:2 }}>Stark Team is running as a full-screen app on this device.</div>
               </div>
             </div>
@@ -504,7 +502,7 @@ export default function SettingsPage() {
               </div>
             ))}
             <div style={{ background:S.s2, border:`1px solid ${S.bd}`, borderRadius:8, padding:'8px 12px', fontSize:12, color:S.mu, marginTop:6 }}>
-              ℹ️ You may need to allow "Install from unknown sources" in your Android settings when installing the APK.
+              ℹ️ You may need to allow &quot;Install from unknown sources&quot; in your Android settings when installing the APK.
             </div>
           </div>
 

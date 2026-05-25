@@ -1,1 +1,1 @@
-export default function RejectModal(props: any) { return null }
+﻿export default function RejectModal() { return null }

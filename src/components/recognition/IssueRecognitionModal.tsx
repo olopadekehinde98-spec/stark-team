@@ -1,1 +1,1 @@
-export default function IssueRecognitionModal(props: any) { return null }
+﻿export default function IssueRecognitionModal() { return null }

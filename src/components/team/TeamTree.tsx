@@ -1,1 +1,1 @@
-export default function TeamTree(props: any) { return null }
+﻿export default function TeamTree() { return null }

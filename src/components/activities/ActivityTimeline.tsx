@@ -1,1 +1,1 @@
-export default function ActivityTimeline(props: any) { return null }
+﻿export default function ActivityTimeline() { return null }

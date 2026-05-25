@@ -116,7 +116,7 @@ export default function LeaderboardSettingsPage() {
       <div style={{ background: S.goldBg, border: `1px solid ${S.goldBd}`, borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#92400E', marginBottom: 6 }}>📊 How leaderboard scoring works</div>
         <div style={{ fontSize: 12, color: '#78350F', lineHeight: 1.8 }}>
-          Each member's score = <strong>(verified activities × verified weight) + (unverified activities × unverified weight) + (rejected activities × rejected weight)</strong>.
+          Each member&apos;s score = <strong>(verified activities × verified weight) + (unverified activities × unverified weight) + (rejected activities × rejected weight)</strong>.
           Adjust the weights below to change how much each status contributes to the ranking.
         </div>
       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -48,6 +49,7 @@ export default function LeaderboardPage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     fetch(`/api/leaderboard/live?period=${period}`)
       .then(r => r.json())
