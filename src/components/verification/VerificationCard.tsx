@@ -1,1 +1,1 @@
-export default function VerificationCard(props: any) { return null }
+﻿export default function VerificationCard() { return null }

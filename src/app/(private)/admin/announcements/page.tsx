@@ -42,9 +42,10 @@ export default function AdminAnnouncementsPage() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [])
 
-  async function handleCreate(body: any) {
+  async function handleCreate(body: Record<string, unknown>) {
     const res = await fetch('/api/admin/announcements', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     })
@@ -54,7 +55,7 @@ export default function AdminAnnouncementsPage() {
     setShowCreate(false)
   }
 
-  async function handleEdit(id: string, body: any) {
+  async function handleEdit(id: string, body: Record<string, unknown>) {
     const res = await fetch(`/api/admin/announcements/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     })

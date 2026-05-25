@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 const S = {
@@ -76,8 +78,6 @@ export default function AOLPage() {
 
   const verified  = activities.filter(a => a.status === 'verified').length
   const pending   = activities.filter(a => a.status === 'pending').length
-  const rejected  = activities.filter(a => a.status === 'rejected').length
-  const totalPts  = activities.filter(a => a.status === 'verified').reduce((s, a) => s + (a.points ?? 0), 0)
   const rate      = activities.length ? Math.round((verified / activities.length) * 100) : 0
 
   if (loading) return (
@@ -136,10 +136,10 @@ export default function AOLPage() {
         <div style={{ background:S.s1, border:`1px solid ${S.bd}`, borderRadius:12, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ padding:'16px 20px', borderBottom:`1px solid ${S.bd}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <div style={{ fontSize:14, fontWeight:700, color:S.tx }}>Recent Activities</div>
-            <a href="/activities" style={{ fontSize:12, color:S.blue, textDecoration:'none', fontWeight:600 }}>View all →</a>
+            <Link href="/activities" style={{ fontSize:12, color:S.blue, textDecoration:'none', fontWeight:600 }}>View all →</Link>
           </div>
           {activities.length === 0 ? (
-            <div style={{ padding:40, textAlign:'center', color:S.mu, fontSize:13 }}>No activities yet. <a href="/activities/submit" style={{ color:S.blue }}>Submit one →</a></div>
+            <div style={{ padding:40, textAlign:'center', color:S.mu, fontSize:13 }}>No activities yet. <Link href="/activities/submit" style={{ color:S.blue }}>Submit one →</Link></div>
           ) : activities.map((a, i, arr) => {
             const statusColor = a.status === 'verified' ? S.ok : a.status === 'pending' ? S.blue : S.err
             const statusBg    = a.status === 'verified' ? S.okBg : a.status === 'pending' ? S.blueBg : S.errBg
@@ -204,7 +204,7 @@ export default function AOLPage() {
             )
           })}
           <div style={{ padding:'12px 20px', borderTop:`1px solid ${S.bd}` }}>
-            <a href="/team" style={{ fontSize:12, color:S.blue, textDecoration:'none', fontWeight:600 }}>View full team →</a>
+            <Link href="/team" style={{ fontSize:12, color:S.blue, textDecoration:'none', fontWeight:600 }}>View full team →</Link>
           </div>
         </div>
       </div>

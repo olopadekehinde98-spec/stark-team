@@ -1,1 +1,1 @@
-export default function ProofUploader(props: any) { return null }
+﻿export default function ProofUploader() { return null }

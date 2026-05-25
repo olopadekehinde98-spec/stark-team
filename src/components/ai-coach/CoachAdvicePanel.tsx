@@ -1,1 +1,1 @@
-export default function CoachAdvicePanel(props: any) { return null }
+﻿export default function CoachAdvicePanel() { return null }

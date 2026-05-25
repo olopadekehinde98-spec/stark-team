@@ -1,1 +1,1 @@
-export default function InviteManager(props: any) { return null }
+﻿export default function InviteManager() { return null }

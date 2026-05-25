@@ -24,8 +24,8 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search)
       const next = params.get('next')
       window.location.href = (next && next.startsWith('/')) ? next : '/dashboard'
-    } catch (err: any) {
-      setError(err?.message ?? 'Something went wrong. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
     }
   }

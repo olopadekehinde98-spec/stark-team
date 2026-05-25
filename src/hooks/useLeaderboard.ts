@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export function useLeaderboard(period = 'monthly') {
-  const [entries, setEntries] = useState<any[]>([])
+  const [entries, setEntries] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

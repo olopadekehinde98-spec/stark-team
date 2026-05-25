@@ -1,1 +1,1 @@
-export default function RecognitionCard(props: any) { return null }
+﻿export default function RecognitionCard() { return null }

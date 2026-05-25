@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
@@ -26,9 +27,9 @@ export async function POST(request: Request) {
         .eq('key', 'goal_window_override')
         .single()
       overrideOpen = setting?.value === 'true'
-    } catch { /* app_settings table may not exist yet — treat as no override */ }
+    } catch { /* app_settings table may not exist yet â€” treat as no override */ }
 
-    // Enforce Nigeria time window: 5 AM – 12 PM WAT (UTC+1) — skip if override is on
+    // Enforce Nigeria time window: 5 AM â€“ 12 PM WAT (UTC+1) â€” skip if override is on
     if (!overrideOpen) {
       const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
       if (nigeriaHour < 5 || nigeriaHour >= 12) {

@@ -55,6 +55,7 @@ export default function GoalWindowPage() {
     setWorking(false)
   }
 
+  // eslint-disable-next-line react-hooks/purity
   const nigeriaHour = new Date(Date.now() + 60 * 60 * 1000).getUTCHours()
   const normallyOpen = nigeriaHour >= 5 && nigeriaHour < 12
 

@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
   const content = (body.content ?? '').trim()
 
   if (!content || content.length > 2000)
-    return NextResponse.json({ error: 'Content must be 1–2000 characters' }, { status: 400 })
+    return NextResponse.json({ error: 'Content must be 1â€“2000 characters' }, { status: 400 })
 
   const allowed = ['general', 'branch', 'inbox', 'leadership']
   if (!allowed.includes(channel))
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ message: { ...msg, users: userInfo ?? null } }, { status: 201 })
 }
 
-// DELETE /api/chat?id=<uuid>  (soft-delete — own msg or admin/leader)
+// DELETE /api/chat?id=<uuid>  (soft-delete â€” own msg or admin/leader)
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

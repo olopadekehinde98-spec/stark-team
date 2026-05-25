@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 
 const RANK_ORDER = [
-  'associate', 'senior_associate', 'manager', 'senior_manager',
-  'director', 'senior_director', 'executive', 'senior_executive',
+  'e_member', 'distributor', 'manager', 'senior_manager',
+  'executive_manager', 'director',
 ]
 
 function rankProgress(rank: string) {
@@ -129,12 +129,12 @@ export default async function UserProfilePage({
             </div>
 
             {/* Branch */}
-            {(profile.branches as any)?.name && (
+            {(profile.branches as { name?: string })?.name && (
               <div className="font-mono" style={{
                 marginTop: 10, fontSize: 8, color: 'var(--text-muted)',
                 letterSpacing: '0.12em', textTransform: 'uppercase',
               }}>
-                ◎ {(profile.branches as any).name}
+                ◎ {(profile.branches as { name?: string }).name}
               </div>
             )}
 

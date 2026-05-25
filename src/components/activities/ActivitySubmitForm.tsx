@@ -1,1 +1,1 @@
-export default function ActivitySubmitForm(props: any) { return null }
+﻿export default function ActivitySubmitForm() { return null }

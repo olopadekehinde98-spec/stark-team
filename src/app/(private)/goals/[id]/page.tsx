@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { createClient } from '@/lib/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
@@ -91,7 +92,7 @@ export default function GoalDetailPage() {
       if (!isOwner && ownerData?.full_name) setOwnerName(ownerData.full_name)
       setLoading(false)
     })()
-  }, [id])
+  }, [id, router])
 
   const isOwner   = goal?.user_id === myId
   const isLeader  = myRole === 'leader' || myRole === 'admin'
@@ -267,7 +268,7 @@ export default function GoalDetailPage() {
                               src={act.proof_url}
                               alt="Proof"
                               style={{ maxWidth:'100%', maxHeight:260, borderRadius:8, border:`1px solid ${S.bd}`, objectFit:'contain', display:'block' }}
-                              onError={(e: any) => { e.target.style.display = 'none' }}
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
                             <a href={act.proof_url} target="_blank" rel="noopener noreferrer"
                               style={{ fontSize:12, color:S.blue, display:'inline-block', marginTop:6, textDecoration:'none', fontWeight:600 }}>
@@ -347,7 +348,7 @@ export default function GoalDetailPage() {
         <div style={{ marginTop:16, background:S.warnBg, border:`1px solid ${S.warnBd}`, borderRadius:12, padding:20 }}>
           <div style={{ fontSize:14, fontWeight:700, color:S.warn, marginBottom:6 }}>⏳ Waiting for Approval</div>
           <p style={{ fontSize:13, color:S.warn, lineHeight:1.65, margin:0 }}>
-            Your goal has been submitted and is waiting for your leader to review and approve it. You'll get a notification once it's actioned.
+            Your goal has been submitted and is waiting for your leader to review and approve it. You&apos;ll get a notification once it&apos;s actioned.
           </p>
         </div>
       )}

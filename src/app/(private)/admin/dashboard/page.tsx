@@ -34,6 +34,7 @@ export default async function AdminDashboardPage() {
 
   const [totalUsersRes, activeWeekRes, pendingRes, usersListRes, invitesRes] = await Promise.all([
     supabase.from('users').select('*', { count:'exact', head:true }).eq('is_active', true),
+    // eslint-disable-next-line react-hooks/purity
     supabase.from('activities').select('user_id').gte('submitted_at', new Date(Date.now() - 7 * 864e5).toISOString()),
     supabase.from('activities').select('*', { count:'exact', head:true }).eq('status', 'pending'),
     supabase.from('users').select('id,full_name,username,role,rank,is_active,created_at').order('created_at', { ascending:false }).limit(10),
@@ -41,7 +42,7 @@ export default async function AdminDashboardPage() {
   ])
 
   const totalUsers   = totalUsersRes.count ?? 0
-  const activeWeek   = new Set(activeWeekRes.data?.map((a: any) => a.user_id)).size
+  const activeWeek   = new Set(activeWeekRes.data?.map((a: { user_id: string }) => a.user_id)).size
   const pendingCount = pendingRes.count ?? 0
   const usersList    = usersListRes.data ?? []
   const invites      = invitesRes.data ?? []

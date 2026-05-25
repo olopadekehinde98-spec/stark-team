@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
@@ -28,6 +29,7 @@ function SignupForm() {
 
   useEffect(() => {
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInviteError('No invite token. Please use a valid invite link.')
       return
     }

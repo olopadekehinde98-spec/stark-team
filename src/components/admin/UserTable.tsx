@@ -1,1 +1,1 @@
-export default function UserTable(props: any) { return null }
+﻿export default function UserTable() { return null }

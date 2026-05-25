@@ -12,7 +12,7 @@ export async function createClient() {
         setAll:  (cookiesToSet: Array<{ name: string; value: string; options?: object }>) => {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              (cookieStore as any).set(name, value, options)
+              (cookieStore as unknown as { set: (n: string, v: string, o?: object) => void }).set(name, value, options)
             )
           } catch {}
         },

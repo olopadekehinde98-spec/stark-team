@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
@@ -95,10 +96,12 @@ export default async function VerifyPage() {
 
   const verifiedToday = verifiedTodayRes.data?.length ?? 0
   const count = pendingActivities.length
+  /* eslint-disable react-hooks/purity */
   const avgWaitHours = count > 0
-    ? Math.round(pendingActivities.reduce((sum: number, a: any) =>
+    ? Math.round(pendingActivities.reduce((sum: number, a: { submitted_at: string }) =>
         sum + (Date.now() - new Date(a.submitted_at).getTime()) / 3600000, 0) / count)
     : 0
+  /* eslint-enable react-hooks/purity */
 
   return (
     <div>

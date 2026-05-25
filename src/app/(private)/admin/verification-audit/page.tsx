@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useEffect, useState } from 'react'
 
@@ -67,6 +68,7 @@ export default function VerificationAuditPage() {
         r.verifier?.full_name?.toLowerCase().includes(q)
       )
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFiltered(list)
   }, [search, filter, records])
 

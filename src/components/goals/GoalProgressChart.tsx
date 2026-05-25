@@ -1,1 +1,1 @@
-export default function GoalProgressChart(props: any) { return null }
+﻿export default function GoalProgressChart() { return null }

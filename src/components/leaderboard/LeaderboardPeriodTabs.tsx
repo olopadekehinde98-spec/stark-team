@@ -1,1 +1,1 @@
-export default function LeaderboardPeriodTabs(props: any) { return null }
+﻿export default function LeaderboardPeriodTabs() { return null }

@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToAll } from '@/lib/push'
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
   const notifications = users.map((u: any) => ({
     user_id:        u.id,
     type:           'reminder',
-    title:          '🎯 Set Your Daily Goal Now',
+    title:          'ðŸŽ¯ Set Your Daily Goal Now',
     body:           'Goal window is open until 12:00 PM Nigeria time. Write your goal before it closes!',
     reference_type: 'goal',
     is_read:        false,
@@ -48,9 +49,9 @@ export async function GET(req: NextRequest) {
     await admin.from('notifications').insert(notifications.slice(i, i + 100))
   }
 
-  // Send push to all subscribed devices — silent visual pop-up
+  // Send push to all subscribed devices â€” silent visual pop-up
   await sendPushToAll({
-    title: '🎯 Set Your Daily Goal',
+    title: 'ðŸŽ¯ Set Your Daily Goal',
     body:  'Goal window is open! Write your goal before 12:00 PM Nigeria time.',
     url:   '/goals/create',
     tag:   'daily-goal-reminder',

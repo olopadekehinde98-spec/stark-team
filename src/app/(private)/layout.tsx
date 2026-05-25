@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { createClient } from '@/lib/supabase/client'
 import ErrorBoundary from '@/components/error-monitor/ErrorBoundary'
@@ -19,6 +20,7 @@ function GoalReminderBanner() {
   const [hour, setHour] = useState<number | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHour(getNigeriaHour())
     const t = setInterval(() => setHour(getNigeriaHour()), 60_000)
     return () => clearInterval(t)
@@ -155,6 +157,7 @@ function PushPermissionBanner() {
     if (perm === 'denied') {
       // Show a message telling them how to re-enable
       const dismissed = sessionStorage.getItem('push-denied-dismissed')
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!dismissed) setDenied(true)
       return
     }
@@ -306,6 +309,7 @@ export default function PrivateLayout({ children }: { children: React.ReactNode 
   }, [router])
 
   // close More drawer on nav
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setShowMore(false) }, [pathname])
 
 

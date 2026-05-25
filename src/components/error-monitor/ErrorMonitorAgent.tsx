@@ -56,8 +56,6 @@ interface Props {
 }
 
 export default function ErrorMonitorAgent({ role }: Props) {
-  // Only visible to admin and leader
-  if (role !== 'admin' && role !== 'leader') return null
   const [errors,  setErrors]  = useState<CapturedError[]>([])
   const [open,    setOpen]    = useState(false)
   const [pulse,   setPulse]   = useState(false)
@@ -154,6 +152,8 @@ export default function ErrorMonitorAgent({ role }: Props) {
       window.fetch = origFetch
     }
   }, [addError])
+
+  if (role !== 'admin' && role !== 'leader') return null
 
   const unresolved = errors.length
   const hasErrors  = unresolved > 0

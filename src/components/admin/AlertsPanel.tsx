@@ -1,1 +1,1 @@
-export default function AlertsPanel(props: any) { return null }
+﻿export default function AlertsPanel() { return null }

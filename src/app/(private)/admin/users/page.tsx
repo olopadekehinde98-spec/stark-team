@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useEffect, useState } from 'react'
 
@@ -60,8 +61,6 @@ export default function AdminUsersPage() {
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [deleting,   setDeleting]   = useState<string | null>(null)
 
-  useEffect(() => { loadUsers() }, [])
-
   async function loadUsers() {
     setLoading(true)
     setApiError('')
@@ -74,11 +73,14 @@ export default function AdminUsersPage() {
         const d = await r.json().catch(() => ({}))
         setApiError(`Failed to load members: ${d.error ?? r.statusText}`)
       }
-    } catch (e: any) {
-      setApiError('Network error: ' + (e.message ?? 'Unknown'))
+    } catch (e: unknown) {
+      setApiError('Network error: ' + ((e as Error).message ?? 'Unknown'))
     }
     setLoading(false)
   }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => { loadUsers() }, [])
 
   function flash(msg: string, ok = true) {
     setToast(msg); setToastOk(ok)

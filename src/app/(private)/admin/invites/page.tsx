@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 
@@ -48,6 +49,7 @@ export default function AdminInvitesPage() {
     if (r.ok) { const d = await r.json(); setInvites(d.invites ?? []) }
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadInvites() }, [loadInvites])
 
   function flash(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }

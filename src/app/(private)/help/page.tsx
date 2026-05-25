@@ -111,7 +111,7 @@ export default function HelpPage() {
         <Step n={1} text="Open stark-team.vercel.app in your browser." />
         <Step n={2} text='You will see the login page. Enter your email address and password, then click "Sign In".' />
         <Step n={3} text="You will be taken straight to your Dashboard. If you see an error, double-check your email and password — both must match exactly what you registered with." />
-        <Alert type="blue">Don't have an account? You must receive an invite link from your team leader to register. You cannot sign up without one.</Alert>
+        <Alert type="blue">Don&apos;t have an account? You must receive an invite link from your team leader to register. You cannot sign up without one.</Alert>
       </Section>
 
       {/* How to Sign Out */}
@@ -291,7 +291,7 @@ export default function HelpPage() {
       {/* Install App */}
       <Section title="Install Stark Team as an App on Your Phone" icon="📲">
         <Alert type="blue">
-          Stark Team is a Progressive Web App (PWA) — you can add it to your phone's home screen so it opens like a real app, full-screen with no browser bar.
+          Stark Team is a Progressive Web App (PWA) — you can add it to your phone&apos;s home screen so it opens like a real app, full-screen with no browser bar.
         </Alert>
 
         {/* Android */}
@@ -334,7 +334,7 @@ export default function HelpPage() {
       <Section title="Need More Help?" icon="📞">
         <p style={{ fontSize:13, color:S.tx2, lineHeight:1.8, marginTop:14 }}>
           This is a private platform managed by <strong style={{ color:S.tx }}>Stark Team administration</strong>.
-          If you have a problem that isn't covered here:
+          If you have a problem that isn&apos;t covered here:
         </p>
         <div style={{ marginTop:10 }}>
           <div style={{ fontSize:13, color:S.tx2, marginTop:8 }}>📧 Contact your team leader directly</div>

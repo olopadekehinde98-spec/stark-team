@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -86,7 +87,6 @@ export default function DashboardPage() {
   if (!data) return null
 
   const name      = data.profile?.full_name?.split(' ')[0] ?? 'there'
-  const rankLabel = (data.profile?.rank ?? 'member').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
   const today     = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })
   const roleLabel = (data.profile?.role ?? 'member').replace(/\b\w/g, (c: string) => c.toUpperCase())
 

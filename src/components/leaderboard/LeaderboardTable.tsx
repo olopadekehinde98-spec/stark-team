@@ -1,1 +1,1 @@
-export default function LeaderboardTable(props: any) { return null }
+﻿export default function LeaderboardTable() { return null }
