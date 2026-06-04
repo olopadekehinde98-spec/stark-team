@@ -59,7 +59,7 @@ export default function AOLPage() {
       const [profRes, actsRes, teamRes] = await Promise.all([
         supabase.from('users').select('full_name,rank,role,branch_id').eq('id', user.id).single(),
         supabase.from('activities')
-          .select('id,title,activity_type,status,submitted_at,points')
+          .select('id,title,activity_type,status,submitted_at')
           .eq('user_id', user.id)
           .order('submitted_at', { ascending: false })
           .limit(20),
@@ -155,9 +155,6 @@ export default function AOLPage() {
                 <span style={{ fontSize:11, fontWeight:600, padding:'3px 9px', borderRadius:20, background:statusBg, color:statusColor }}>
                   {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
                 </span>
-                {a.points > 0 && a.status === 'verified' && (
-                  <span style={{ fontSize:11, fontWeight:700, color:S.gold }}>+{a.points}pts</span>
-                )}
               </div>
             )
           })}

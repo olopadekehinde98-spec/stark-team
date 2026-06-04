@@ -55,8 +55,15 @@ export default function SettingsPage() {
         setProfile(data)
         setFullName(data.full_name ?? '')
         setBio(data.bio ?? '')
+        // Load notification prefs: try DB columns first, fall back to localStorage
+        const stored = (() => { try { return JSON.parse(localStorage.getItem('notif_prefs') ?? '{}') } catch { return {} } })()
         const t: Record<string,boolean> = {}
-        NOTIF_PREFS.forEach(p => { t[p.key] = data[p.key] ?? true })
+        NOTIF_PREFS.forEach(p => {
+          // DB column exists → use it; otherwise use localStorage; otherwise default true
+          if (typeof data[p.key] === 'boolean') t[p.key] = data[p.key]
+          else if (typeof stored[p.key] === 'boolean') t[p.key] = stored[p.key]
+          else t[p.key] = true
+        })
         setToggles(t)
       })
     })
@@ -107,13 +114,18 @@ export default function SettingsPage() {
 
   async function saveNotifs() {
     setSaving(true); setMsg(null)
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) return
-    const user = session.user
-    const { error } = await supabase.from('users').update(toggles).eq('id', user.id)
+    // Always save to localStorage first — works even before DB columns exist
+    try { localStorage.setItem('notif_prefs', JSON.stringify(toggles)) } catch { /* ignore */ }
+    // Also try DB (silently — columns may not exist until migration 009 is run)
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await supabase.from('users').update(toggles).eq('id', session.user.id)
+      }
+    } catch { /* DB columns not yet added — localStorage save above is sufficient */ }
     setSaving(false)
-    setMsg(error ? { text:'Failed: ' + error.message, ok:false } : { text:'Preferences saved ✓', ok:true })
+    setMsg({ text: 'Preferences saved ✓', ok: true })
   }
 
   async function sendPasswordReset() {

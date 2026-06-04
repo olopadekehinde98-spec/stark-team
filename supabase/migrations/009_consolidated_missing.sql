@@ -109,6 +109,15 @@ CREATE POLICY "admins and leaders can read all error logs"
     )
   );
 
+-- ── Add notification preference columns to users ─────────────
+-- These power the Settings → Notifications tab toggles.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_activity_verified boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_activity_rejected boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_goal_reminder     boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_rank_change       boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_recognition       boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_system            boolean NOT NULL DEFAULT true;
+
 -- ── Fix: recognition_weekly_limits missing SELECT policy ──────
 -- Without this, the weekly badge limit was never enforced.
 DROP POLICY IF EXISTS "recognition_weekly_limits_own_select" ON recognition_weekly_limits;
