@@ -25,15 +25,28 @@ export async function POST(req: NextRequest) {
     ? message
     : `Congratulations on this achievement! Your hard work and dedication to the team is truly appreciated.`
   const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
-  const { data: limit } = await supabase.from('recognition_weekly_limits').select('count').eq('issuer_id', user.id).gte('week_start', weekStart.toISOString()).single()
-  if (limit && limit.count >= 3) return NextResponse.json({ error: 'Weekly recognition limit (3) reached' }, { status: 429 })
   const admin = createAdminClient()
+  // Must use admin client — recognition_weekly_limits has no SELECT RLS policy for regular users
+  const { data: limit } = await admin.from('recognition_weekly_limits').select('count').eq('issuer_id', user.id).gte('week_start', weekStart.toISOString()).single()
+  if (limit && limit.count >= 3) return NextResponse.json({ error: 'Weekly recognition limit (3) reached' }, { status: 429 })
   const { data, error } = await admin.from('recognitions').insert({ ...body, message: safeMessage, issued_by: user.id }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (limit) {
     await admin.from('recognition_weekly_limits').update({ count: limit.count + 1 }).eq('issuer_id', user.id).gte('week_start', weekStart.toISOString())
   } else {
     await admin.from('recognition_weekly_limits').insert({ issuer_id: user.id, week_start: weekStart.toISOString(), count: 1 })
+  }
+  // Notify the recipient (best-effort)
+  if (body.recipient_id) {
+    try {
+      await admin.from('notifications').insert({
+        user_id:        body.recipient_id,
+        type:           'recognition',
+        title:          `🏅 Badge Awarded: ${body.title ?? 'Recognition'}`,
+        body:           safeMessage.slice(0, 120),
+        reference_type: 'recognition',
+      })
+    } catch { /* non-critical */ }
   }
   return NextResponse.json(data, { status: 201 })
 }

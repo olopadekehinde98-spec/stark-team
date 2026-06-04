@@ -13,13 +13,25 @@ async function requireAdmin() {
 
 /** GET /api/admin/goal-window — returns { open: boolean } */
 export async function GET() {
-  const admin = createAdminClient()
-  const { data } = await admin
-    .from('app_settings')
-    .select('value')
-    .eq('key', 'goal_window_override')
-    .single()
-  return NextResponse.json({ open: data?.value === 'true' })
+  // Auth check — only admins may read the override state
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: p } = await supabase.from('users').select('role').eq('id', user.id).single()
+  if (p?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  try {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'goal_window_override')
+      .single()
+    return NextResponse.json({ open: data?.value === 'true' })
+  } catch {
+    // app_settings table may not exist yet — treat as override off
+    return NextResponse.json({ open: false })
+  }
 }
 
 /** POST /api/admin/goal-window — body: { open: boolean }

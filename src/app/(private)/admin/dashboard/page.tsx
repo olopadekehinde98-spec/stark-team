@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -32,13 +33,16 @@ export default async function AdminDashboardPage() {
   const { data: myProfile } = await supabase.from('users').select('role,rank,full_name').eq('id', user.id).single()
   if (myProfile?.role !== 'admin') redirect('/dashboard')
 
+  // Use admin client so RLS doesn't block invite_links or cross-user activity counts
+  const admin = createAdminClient()
+
   const [totalUsersRes, activeWeekRes, pendingRes, usersListRes, invitesRes] = await Promise.all([
-    supabase.from('users').select('*', { count:'exact', head:true }).eq('is_active', true),
+    admin.from('users').select('*', { count:'exact', head:true }).eq('is_active', true),
     // eslint-disable-next-line react-hooks/purity
-    supabase.from('activities').select('user_id').gte('submitted_at', new Date(Date.now() - 7 * 864e5).toISOString()),
-    supabase.from('activities').select('*', { count:'exact', head:true }).eq('status', 'pending'),
-    supabase.from('users').select('id,full_name,username,role,rank,is_active,created_at').order('created_at', { ascending:false }).limit(10),
-    supabase.from('invite_links').select('id,assigned_email,token,created_at,used_at,is_active,used_by').order('created_at', { ascending:false }).limit(5),
+    admin.from('activities').select('user_id').gte('submitted_at', new Date(Date.now() - 7 * 864e5).toISOString()),
+    admin.from('activities').select('*', { count:'exact', head:true }).eq('status', 'pending'),
+    admin.from('users').select('id,full_name,username,role,rank,is_active,created_at').order('created_at', { ascending:false }).limit(10),
+    admin.from('invite_links').select('id,assigned_email,token,created_at,used_at,is_active,used_by').order('created_at', { ascending:false }).limit(5),
   ])
 
   const totalUsers   = totalUsersRes.count ?? 0
